@@ -1,0 +1,72 @@
+import { getAuth } from "firebase-admin/auth";
+import { app } from "../config/firebase.js";
+import { User } from "../models/user.model.js";
+import redis from "../../../shared/redis/redis.js";
+export const login = async (req, res) => {
+  try {
+    const idToken = req.body.token || req.cookies.token;
+    if (!idToken) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    const authClient = getAuth(app);
+    const decodedToken = await authClient.verifyIdToken(idToken);
+    const { uid, email, name, picture } = decodedToken;
+
+    // Check if user already exists in DB, otherwise create a new entry
+    let user = await User.findOne({ firebaseUid: uid });
+    if (!user) {
+      user = await User.create({
+        firebaseUid: uid,
+        name: name || email.split("@")[0],
+        email: email,
+        avatar: picture,
+      });
+    }
+    const sessionID = crypto.randomUUID();
+    await redis.set(`session:${sessionID}`, JSON.stringify(user), "EX", 5*24 * 60 * 60);
+    // Set the token as an HTTP-only cookie
+    res.cookie("sessionID", sessionID, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      user,
+    });
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return res.status(401).json({
+      message: "Authentication failed",
+      error: error.message,
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const sessionID = req.cookies.sessionID;
+    if (!sessionID) {
+      return res.status(400).json({ message: "Session ID is required" });
+    }
+    await redis.del(`session:${sessionID}`);
+    res.clearCookie("sessionID", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+    return res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res
+      .status(500)
+      .json({ message: "Logout failed", error: error.message });
+  }
+};
+
+export const getMe = async (req, res) => {
+  return res.status(200).json({ user: req.user });
+};
