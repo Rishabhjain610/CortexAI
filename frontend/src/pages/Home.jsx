@@ -2,7 +2,13 @@ import React from 'react'
 import api from '../utils/api.js'
 import { signInWithPopup, googleProvider, auth } from "../utils/firebase.js";
 
-const Home = ({ user, setUser }) => {
+import { useSelector, useDispatch } from 'react-redux';
+import { setUserData } from '../redux/userSlice.js';
+
+const Home = () => {
+  const user = useSelector((state) => state.user.userData);
+  const dispatch = useDispatch();
+
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -10,9 +16,9 @@ const Home = ({ user, setUser }) => {
       console.log("Firebase ID Token:", token);
 
       // Send the token to the backend API gateway
-      const response = await api.post('/auth/login', { token });
+      const response = await api.post('/api/auth/login', { token });
       
-      setUser(response.data.user);
+      dispatch(setUserData(response.data.user));
       console.log("Login successful:", response.data.user);
     } catch (error) {
       console.error("Sign in failed:", error.response?.data || error.message);
@@ -21,8 +27,8 @@ const Home = ({ user, setUser }) => {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout', {});
-      setUser(null);
+      await api.post('/api/auth/logout', {});
+      dispatch(setUserData(null));
       console.log("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);

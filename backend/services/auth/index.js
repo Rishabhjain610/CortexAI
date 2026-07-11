@@ -1,4 +1,5 @@
-import "./config/env.js"; // MUST be first — loads env vars before any other module
+import dotenv from "dotenv";
+dotenv.config();
 import express from 'express'
 import cookieParser from 'cookie-parser'
 import connectDB from './config/db.js';
