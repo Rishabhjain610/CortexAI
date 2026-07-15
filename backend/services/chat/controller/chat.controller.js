@@ -1,5 +1,6 @@
 import { conversationModel } from "../models/conversation.model.js";
 import { messageModel } from "../models/message.model.js";
+import redis from "../../../shared/redis/redis.js";
 
 export const createConversation = async (req, res) => {
   try {
@@ -50,6 +51,23 @@ export const saveMessage = async (req, res) => {
       content,
       role: role || "user",
     });
+
+    // Active conversation ka cache agar Redis mein pehle se bana hua hai,
+    // toh usme naya message append kar denge, latest 20 messages ko keep karenge aur 30 minutes ka TTL refresh karenge.
+    const cacheKey = `chat:history:${conversationId}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      let messages = JSON.parse(cached);
+      messages.push(savedMessage);
+      
+      // Sirf latest 20 messages hi save karenge Redis mein
+      if (messages.length > 20) {
+        messages = messages.slice(-20);
+      }
+      
+      await redis.set(cacheKey, JSON.stringify(messages), "EX", 30 * 60); // 30 minutes ke liye cache refresh kiya
+    }
+
     return res.status(201).json({
       success: true,
       message: "Message saved",
@@ -107,7 +125,31 @@ export const deleteConversation = async (req, res) => {
 export const getMessage = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const messages = await messageModel.find({ conversation: conversationId });
+    const cacheKey = `chat:history:${conversationId}`;
+
+    // 1. Sabse pehle cache check karenge Redis mein
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      console.log(`[Cache Hit] Serving history for convo ${conversationId} from Redis`);
+      return res.status(200).json({
+        success: true,
+        message: "Messages fetched (Cached)",
+        data: JSON.parse(cached),
+      });
+    }
+
+    // 2. Cache Miss: Agar Redis mein nahi mila, toh MongoDB se fetch karenge
+    console.log(`[Cache Miss] Fetching history for convo ${conversationId} from MongoDB`);
+    let messages = await messageModel.find({ conversation: conversationId });
+
+    // Sirf latest 20 messages hi cache aur return karenge
+    if (messages.length > 20) {
+      messages = messages.slice(-20);
+    }
+
+    // 3. Agli baar ke liye data ko Redis cache mein save karenge 30 minutes ke TTL ke sath
+    await redis.set(cacheKey, JSON.stringify(messages), "EX", 30 * 60);
+
     return res.status(200).json({
       success: true,
       message: "Messages fetched",

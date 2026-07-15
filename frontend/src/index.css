@@ -1,6 +1,78 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,300;1,8..60,400;1,8..60,500&display=swap');
 @import "tailwindcss";
 
+
+
+
+/* ── Tailwind v4 theme tokens ── */
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+
+  --color-base-950: #07070a;
+  --color-base-900: #0e0e12;
+  --color-base-850: #15151c;
+  --color-base-800: #1e1e27;
+  --color-base-700: #30303e;
+  --color-base-500: #626279;
+  --color-base-400: #9393ad;
+  --color-base-200: #d6d6e6;
+  --color-base-100: #f2f2f7;
+
+  --color-accent-500: #7c7ec8;
+  --color-accent-400: #8d8fcf;
+  --color-accent-200: rgba(124, 126, 200, 0.18);
+  --color-accent-100: rgba(124, 126, 200, 0.08);
+
+}
+
+
+
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-base-900);
+  color: var(--color-base-100);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Placeholder ── */
+textarea::placeholder,
+input::placeholder {
+  color: var(--color-base-500);
+}
+
+textarea,
+input,
+button,
+select {
+  font-family: var(--font-sans);
 }

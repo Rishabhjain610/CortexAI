@@ -15,10 +15,13 @@
     "axios": "^1.18.1",
     "dotenv": "^17.4.2",
     "firebase": "^12.15.0",
+    "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.1",
+    "remark-gfm": "^4.0.1",
     "tailwindcss": "^4.3.2"
   },
   "devDependencies": {

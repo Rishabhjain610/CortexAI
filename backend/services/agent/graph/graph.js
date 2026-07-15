@@ -37,12 +37,12 @@ workflow.addConditionalEdges(
 );
 
 // 4. Add transition from agents to the END node
-workflow.addEdge("chatAgent", END);
-workflow.addEdge("imageAgent", END);
-workflow.addEdge("pdfAgent", END);
-workflow.addEdge("searchAgent", END);
-workflow.addEdge("pptAgent", END);
-workflow.addEdge("codingAgent", END);
+workflow.addEdge("searchAgent", "chatAgent");
+workflow.addEdge("chatAgent", "__end__");
+workflow.addEdge("imageAgent", "__end__");
+workflow.addEdge("pdfAgent", "__end__");
+workflow.addEdge("pptAgent", "__end__");
+workflow.addEdge("codingAgent", "__end__");
 
 // 5. Compile the workflow graph
 const app = workflow.compile();

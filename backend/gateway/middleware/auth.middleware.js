@@ -2,14 +2,24 @@ import redis from "../../shared/redis/redis.js";
 
 export const requireAuth = async (req, res, next) => {
   try {
+    // CORS preflight OPTIONS request ke liye check, isme browser cookies nahi bhejta.
+    // So isko bina auth check ke next() middleware par pass kar do.
+    if (req.method === "OPTIONS") {
+      return next();
+    }
+    console.log("--- AUTH MIDDLEWARE ---");
+    console.log("Path:", req.path);
+    console.log("Cookies received:", req.cookies);
     const sessionID = req.cookies.sessionID;
     if (!sessionID) {
+      console.log("Auth failed: No sessionID cookie found");
       return res
         .status(401)
         .json({ message: "Unauthorized: No session found" });
     }
 
     const cachedUser = await redis.get(`session:${sessionID}`);
+    console.log("Session lookup in Redis:", cachedUser ? "FOUND" : "NOT FOUND");
     if (!cachedUser) {
       return res
         .status(401)
