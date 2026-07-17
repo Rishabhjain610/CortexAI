@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// workspace sub-files schema representation
 const fileSchema = new mongoose.Schema(
   {
     name: String,
@@ -8,6 +9,7 @@ const fileSchema = new mongoose.Schema(
   { _id: false },
 );
 
+// artifact output (code assets bundle) schema mapping definitions
 const artifactSchema = new mongoose.Schema(
   {
     id: Number,
@@ -19,6 +21,8 @@ const artifactSchema = new mongoose.Schema(
     _id: false,
   },
 );
+
+// chat individual text / images / artifacts message model definitions
 const messageSchema = new mongoose.Schema(
   {
     content: String,

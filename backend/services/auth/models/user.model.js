@@ -1,4 +1,6 @@
 import mongoose from "mongoose"
+
+// app ke database user account details schema definitions
 const userSchema=new mongoose.Schema({
     firebaseUid:{
         type:String,

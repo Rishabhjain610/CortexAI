@@ -8,8 +8,11 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+
+// router mapping integration
 app.use("/", chatRouter);
 
+// database link verify and chat service port start logic
 const startServer = async () => {
   try {
     await connectDB();

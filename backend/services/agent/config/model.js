@@ -17,27 +17,13 @@ export const ollama = new ChatOllama({
   baseUrl: "http://localhost:11434",
 });
 
-// OpenRouter model configurations
-const deepseek = new ChatOpenRouter({
+// OpenRouter model configurations - deepseek only (no fallback backup models)
+export const deepseek = new ChatOpenRouter({
   model: "deepseek/deepseek-chat",
   temperature: 0,
-  maxTokens: 25000,
+  maxTokens: 8192,
+  openrouterApiKey: process.env.OPENROUTER_API_KEY,
 });
-
-const qwenCoder = new ChatOpenRouter({
-  model: "qwen/qwen-2.5-coder-32b-instruct",
-  temperature: 0,
-  maxTokens: 25000,
-});
-
-const geminiFlash = new ChatOpenRouter({
-  model: "google/gemini-2.5-flash",
-  temperature: 0,
-  maxTokens: 25000,
-});
-
-// Chain mapping: DeepSeek down hone par automatic Qwen Coder aur fir Gemini Flash par switch ho jayega (resilience implementation).
-export const openrouter = deepseek.withFallbacks([qwenCoder, geminiFlash]);
 
 // Agent roles mapping function: Sahi agent ko sahi model dispatch karne ke liye router.
 export const getModel = (agent) => {
@@ -47,7 +33,7 @@ export const getModel = (agent) => {
     case "intent":
       return groq;   // User intent samajhne ke liye fast groq model use karte hain.
     case "codingAgent":
-      return openrouter;   // Code generation ke liye high capability wala openrouter model stack return karte hain.
+      return deepseek;   // Code generation ke liye deepseek return karte hain.
     case "pdfAgent":
       return groq;
     case "searchAgent":

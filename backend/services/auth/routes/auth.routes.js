@@ -3,6 +3,7 @@ import { login, logout } from '../controller/auth.controller.js';
 
 const router = express.Router();
 
+// login aur logout endpoints mapping definitions
 router.post('/login', login);
 router.post('/logout', logout);
 

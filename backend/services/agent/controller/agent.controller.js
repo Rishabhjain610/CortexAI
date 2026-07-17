@@ -7,7 +7,7 @@ export const agent = async (req, res) => {
     const { prompt, conversationId, model, agent: selectedAgent } = req.body;
     console.log("req.body received in agent controller:", req.body);
     
-    // Fetch chat history from chat service (if conversationId exists)
+    // chat history nikalne ke liye chat service ko call lagaya
     let history = [];
     if (conversationId) {
       try {
@@ -18,7 +18,7 @@ export const agent = async (req, res) => {
       }
     }
 
-    // Automatically generate conversation title if this is the first message
+    // agar pehla message hai toh convo ka title automatic generate karo
     let titlePromise = null;
     if (conversationId && history.length === 0) {
       const llm = getModel("chatAgent");
@@ -34,7 +34,7 @@ export const agent = async (req, res) => {
       }).catch(err => console.error("Error generating conversation title:", err.message));
     }
 
-    // Save user message to chat service (runs in background)
+    // user ka chat message backend db me save karne ke liye call
     await axios.post(
       `${process.env.CHAT_SERVICE}/save-message`,
       {
@@ -44,14 +44,14 @@ export const agent = async (req, res) => {
       },
     ).catch(err => console.error("Error saving user message to database:", err.message));
 
-    // Set streaming headers for Server-Sent Events (SSE)
+    // server-sent events (SSE) headers set kar rahe hain taaki chunks stream ho sakein
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
 
-    // Stream LangGraph events (capturing token-by-token LLM output)
+    // LangGraph ke events suno aur token by token yield karo
     const stream = await graph.streamEvents(
       { prompt, conversationId, history, model, agent: selectedAgent },
       { version: "v2" }
@@ -59,7 +59,7 @@ export const agent = async (req, res) => {
 
     for await (const event of stream) {
       if (event.event === "on_chat_model_stream" || event.event === "on_llm_stream") {
-        // Skip routing classification stream events leaking to client
+        // check taaki routing node ka inner log user screen par leak na ho
         if (event.metadata?.langgraph_node === "router") {
           continue;
         }
@@ -78,6 +78,17 @@ export const agent = async (req, res) => {
         }
       } else if (event.event === "on_chain_end") {
         const output = event.data.output;
+        // Image Agent complete hone par final output response ek hi baar me stream karein
+        if (event.metadata?.langgraph_node === "imageAgent" && output) {
+          if (output.aiResponse) {
+            console.log("Streaming final imageAgent response:", output.aiResponse);
+            res.write(`data: ${JSON.stringify({ text: output.aiResponse })}\n\n`);
+          }
+          if (output.images && Array.isArray(output.images) && output.images.length > 0) {
+            console.log("Streaming images from imageAgent:", output.images);
+            res.write(`data: ${JSON.stringify({ images: output.images })}\n\n`);
+          }
+        }
         if (output && Array.isArray(output.artifacts) && output.artifacts.length > 0) {
           console.log("Streaming artifacts:", output.artifacts);
           res.write(`data: ${JSON.stringify({ artifacts: output.artifacts })}\n\n`);
@@ -85,7 +96,7 @@ export const agent = async (req, res) => {
       }
     }
 
-    // Wait for the asynchronous title generation to finish before completing the stream response
+    // title complete hone ka wait karo fir stream end karenge
     if (titlePromise) {
       try {
         await titlePromise;
@@ -102,4 +113,3 @@ export const agent = async (req, res) => {
     res.end();
   }
 };
-

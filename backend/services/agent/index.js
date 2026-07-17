@@ -1,15 +1,16 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import connectDB from "./config/DB.js";
 import agentRouter from "./routes/agent.routes.js";
-
-dotenv.config();
 
 const app = express();
 
 app.use(express.json());
+
+// router mapping integration
 app.use("/", agentRouter);
 
+// database link verify and agent port start logic
 const startServer = async () => {
   try {
     await connectDB();

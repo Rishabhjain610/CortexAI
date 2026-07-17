@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+
+// chat/conversation session database model definitions
 const conversationSchema = new mongoose.Schema(
   {
     title: {

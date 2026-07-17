@@ -20,7 +20,9 @@ export const router = async (state) => {
     "search", "google", "tavily", "weather", "news", "current time", "time in", 
     "price", "rate", "cost", "how much", "buy", "shop", "stock", "shares", 
     "live", "today", "yesterday", "forecast", "who is", "who was", "biography",
-    "bio of", "born in", "born on", "spouse", "career of"
+    "bio of", "born in", "born on", "spouse", "career of", "gather info", 
+    "gather information", "research", "lookup", "look up", "info", "details", 
+    "find out", "find details"
   ];
   if (searchKeywords.some(keyword => cleanPrompt.includes(keyword))) {
     console.log(`Routed by Keyword Heuristic to: searchAgent`);
@@ -31,7 +33,8 @@ export const router = async (state) => {
   const codingKeywords = [
     "code", "program", "python", "javascript", "react", "html", "css", "java", 
     "c++", "c#", "ruby", "rust", "function", "compile", "debug", "error", "api", 
-    "database", "sql"
+    "database", "sql", "website", "webpage", "web page", "app", "application",
+    "ui", "interface", "template", "page"
   ];
   if (codingKeywords.some(keyword => cleanPrompt.includes(keyword))) {
     console.log(`Routed by Keyword Heuristic to: codingAgent`);

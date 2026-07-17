@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Zap, Code2, BookOpen, Check, Copy, Maximize2 } from "lucide-react";
+import { Zap, Code2, BookOpen, Check, Copy, Maximize2, X, Download, ExternalLink } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setSelectedArtifact, setArtifactOpen } from "../redux/conversationSlice";
 
-/* ── Logo mark rendering ── */
+// app logo svg markup
 const Mark = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className="shrink-0">
     <rect width="36" height="36" rx="9" fill="#7c7ec8" />
@@ -17,7 +17,7 @@ import rehypeRaw from "rehype-raw";
 import Prism from "prismjs";
 import "prismjs/themes/prism-tomorrow.css";
 
-// Yeh function code syntax highlight karne ke liye Prism use karta hai.
+// Prism logic check syntax highlighting
 const safeHighlight = (code, language) => {
   if (!code) return "";
   const lang = (language || "").toLowerCase();
@@ -38,21 +38,21 @@ const safeHighlight = (code, language) => {
     }
   }
 
-  // Fallback (safe escape)
+  // default tag escaping if lang is not matching
   return code
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 };
 
-// Custom CodeBlock jo editable textarea aur syntax highlighted underlay pre container ko manage karta hai.
+// custom editable code display editor
 const CodeBlock = ({ code, language }) => {
   const [codeText, setCodeText] = useState(code);
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef(null);
   const preRef = useRef(null);
 
-  // Streaming text update hone par use state ke saath sync karne ke liye effect.
+  // stream text change hone par sync hook
   useEffect(() => {
     setCodeText(code);
   }, [code]);
@@ -66,7 +66,6 @@ const CodeBlock = ({ code, language }) => {
     }
   };
 
-  // Scroll sync karne ke liye helper function.
   const handleScroll = (e) => {
     if (preRef.current) {
       preRef.current.scrollTop = e.target.scrollTop;
@@ -74,7 +73,7 @@ const CodeBlock = ({ code, language }) => {
     }
   };
 
-  // Content ke according height automatic barhane/ghatane ka auto-resize method.
+  // content length according editor height auto adjust
   const adjustHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -92,54 +91,31 @@ const CodeBlock = ({ code, language }) => {
   };
 
   return (
-    <div className="relative border border-white/[0.08] rounded-xl overflow-hidden my-4 bg-white/[0.02]">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.08] bg-white/[0.03] text-xs font-mono text-base-400 select-none">
-        <span>{language || "code"} (editable)</span>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-base-200 transition-colors cursor-pointer"
-        >
-          {copied ? (
-            <>
-              <Check size={12} className="text-green-400" />
-              <span className="text-green-400 font-medium">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy size={12} />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-      
-      {/* Edit zone superimposition container */}
-      <div className="relative p-4 bg-transparent min-h-[40px]">
-        {/* Background pre wrapper jo styled highlighed spans display karta hai */}
-        <pre 
-          ref={preRef}
-          className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none whitespace-pre-wrap break-all overflow-hidden p-0 m-0 bg-transparent text-base-100 font-mono text-[13px] leading-relaxed select-none"
-          dangerouslySetInnerHTML={{ __html: getHighlightedHtml() }}
-        />
-        {/* Transparent top overlay textarea jisse user edit kar sake */}
-        <textarea
-          ref={textareaRef}
-          value={codeText}
-          onChange={(e) => {
-            setCodeText(e.target.value);
-            setCopied(false);
-          }}
-          onScroll={handleScroll}
-          className="w-full bg-transparent text-transparent caret-white relative z-10 p-0 m-0 border-none outline-none resize-none overflow-hidden block whitespace-pre-wrap break-all font-mono text-[13px] leading-relaxed font-medium"
-          style={{ height: "auto" }}
-          spellCheck="false"
-        />
-      </div>
+    <div className="relative p-4 bg-transparent min-h-[40px]">
+      {/* syntax highlighted text layer (background) */}
+      <pre 
+        ref={preRef}
+        className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none whitespace-pre-wrap break-all overflow-hidden p-0 m-0 bg-transparent text-base-100 font-mono text-[13px] leading-relaxed select-none"
+        dangerouslySetInnerHTML={{ __html: getHighlightedHtml() }}
+      />
+      {/* transparent text editor layer (overlay) */}
+      <textarea
+        ref={textareaRef}
+        value={codeText}
+        onChange={(e) => {
+          setCodeText(e.target.value);
+          setCopied(false);
+        }}
+        onScroll={handleScroll}
+        className="w-full bg-transparent text-transparent caret-white relative z-10 p-0 m-0 border-none outline-none resize-none overflow-hidden block whitespace-pre-wrap break-all font-mono text-[13px] leading-relaxed font-medium"
+        style={{ height: "auto" }}
+        spellCheck="false"
+      />
     </div>
   );
 };
 
-// Streaming JSON strings me se key filenames extract karne wala utility function.
+// stream buffer me se generated files list filter function
 const getFilesFromStream = (rawText) => {
   if (!rawText) return [];
   const regex = /"name"\s*:\s*"([^"]+)"/g;
@@ -166,13 +142,13 @@ const getFilesFromStream = (rawText) => {
       JSON.parse(cleanText);
       files.forEach(f => f.status = "complete");
     } catch (e) {
-      // Still streaming
+      // stream chal raha hai
     }
   }
   return files;
 };
 
-// Workspace file structure details aur dynamic generation progress represent karne wala status component.
+// building loading status component
 const FileBuilderStatus = ({ rawText, artifact }) => {
   const dispatch = useDispatch();
   const files = getFilesFromStream(rawText);
@@ -244,7 +220,7 @@ const FileBuilderStatus = ({ rawText, artifact }) => {
   );
 };
 
-// Multi-file outputs me active files select aur read karne wala tab viewer.
+// multiple files selector switcher tab
 const TabbedFileViewer = ({ files, artifact }) => {
   const [activeTab, setActiveTab] = useState(0);
   const dispatch = useDispatch();
@@ -302,7 +278,7 @@ const TabbedFileViewer = ({ files, artifact }) => {
   );
 };
 
-// Safe JSON check aur converter.
+// raw string JSON converter helper
 function tryParseJSON(text) {
   if (!text) return null;
   let cleaned = text.trim();
@@ -323,12 +299,12 @@ function tryParseJSON(text) {
       return parsed;
     }
   } catch (e) {
-    // Fail silently
+    // json parsing parse failed case
   }
   return null;
 }
 
-// LangGraph output me se <think> tags parse karke thoughts aur assistant response alag karne wala helper.
+// deepseek thinking tag separation parser
 function parseThinking(content) {
   const thinkRegex = /<(?:mm:)?think>([\s\S]*?)(<\/(?:mm:)?think>|$)/i;
   const match = content.match(thinkRegex);
@@ -336,22 +312,22 @@ function parseThinking(content) {
   if (match) {
     const thinking = match[1];
     const response = content.replace(thinkRegex, "").trim();
-    const isThinking = !match[2]; // True if closing tag is missing (still streaming)
+    const isThinking = !match[2]; // status check tag missing check
     return { thinking, response, isThinking };
   }
   
   return { thinking: "", response: content, isThinking: false };
 }
 
-// User assistant thinking flow display karne wala component wrapper.
+// thought process box accordion wrapper
 const ThoughtBox = ({ content, active }) => {
   const [collapsed, setCollapsed] = useState(!active);
 
   useEffect(() => {
     if (active) {
-      setCollapsed(false); // Streaming ke waqt hamesha expanded rakhein
+      setCollapsed(false); // thinking chal rahi ho toh screen open rakho
     } else {
-      setCollapsed(true); // Complete hone par automatic collapse kar dein
+      setCollapsed(true); // thinking complete hone par collapse status set
     }
   }, [active]);
   
@@ -385,7 +361,7 @@ const ThoughtBox = ({ content, active }) => {
   );
 };
 
-/* Renders markdown text with tables, lists, blockquotes, code blocks, etc. */
+// Markdown tables, lists, code alerts, dynamic render component
 const Prose = ({ content }) => (
   <div className="font-sans text-[15px] leading-relaxed text-base-200 font-normal space-y-3">
     <ReactMarkdown
@@ -395,13 +371,7 @@ const Prose = ({ content }) => (
         p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
         strong: ({ node, ...props }) => <strong className="font-semibold text-base-100" {...props} />,
         em: ({ node, ...props }) => <em className="italic" {...props} />,
-        img: ({ node, ...props }) => (
-          <img 
-            className="rounded-lg max-h-[220px] w-auto object-cover border border-white/[0.08] bg-base-850 shadow-md my-2.5 block hover:scale-[1.02] cursor-pointer transition-transform duration-200" 
-            onClick={() => window.open(props.src, "_blank")}
-            {...props} 
-          />
-        ),
+        img: () => null,
         a: ({ node, ...props }) => (
           <a 
             className="text-accent-500 hover:text-accent-400 font-medium underline transition-colors cursor-pointer" 
@@ -517,18 +487,19 @@ const Prose = ({ content }) => (
   </div>
 );
 
-// Main Message Area Component jo poore messages list and user/assistant messages render karta hai.
+// main messaging area container
 const MessageArea = ({ messages, loading, selectedConversationId }) => {
   const containerRef = useRef(null);
+  const [activeLightboxImage, setActiveLightboxImage] = useState(null);
 
-  // Naya chat stream aane par scroll position automatic bottom par shift karne ke liye effect.
+  // scroll sync to bottom hook
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  // Welcome / Greeting state render jab chat list empty ho.
+  // greeting state if messages list is empty
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none bg-base-900">
@@ -570,7 +541,7 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
     >
       <div className="max-w-[800px] mx-auto space-y-8">
         {messages.map((msg, i) => {
-          /* User message — Right aligned */
+          // user prompt layout (right card)
           if (msg.role === "user") {
             return (
               <div key={msg._id || i} className="flex justify-end">
@@ -581,7 +552,7 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
             );
           }
 
-          /* AI message — Left aligned with icon */
+          // assistant layout (left card)
           const { thinking, response, isThinking } = parseThinking(msg.content);
 
           return (
@@ -597,17 +568,77 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                   <ThoughtBox content={thinking} active={isThinking} />
                 )}
                 {msg.images && msg.images.length > 0 && (
-                  <div className="flex flex-wrap gap-3 pb-3">
-                    {msg.images.map((imgUrl, imgIdx) => (
-                      <div key={imgIdx} className="relative group max-w-[220px] rounded-lg overflow-hidden border border-white/[0.08] bg-base-850 hover:border-white/[0.2] transition-all duration-200 shadow-md">
-                        <img 
-                          src={imgUrl} 
-                          alt={`Search result ${imgIdx + 1}`} 
-                          className="w-full h-auto object-cover max-h-[160px] cursor-pointer hover:scale-[1.03] transition-transform duration-200"
-                          onClick={() => window.open(imgUrl, "_blank")}
-                        />
+                  <div className="pb-3 w-full">
+                    {msg.images.length === 1 ? (
+                      // Single Image: Renders as a beautiful, premium visual card with full controls (ideal for AI Generated Images)
+                      <div className="relative group max-w-[480px] w-full rounded-2xl overflow-hidden border border-white/[0.07] bg-base-850 hover:border-white/[0.18] transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
+                        <div className="relative w-full overflow-hidden bg-base-900 aspect-[4/3] flex items-center justify-center">
+                          <img 
+                            src={msg.images[0]} 
+                            alt="AI Generated Output" 
+                            className="w-full h-full object-cover cursor-zoom-in transition-transform duration-500 group-hover:scale-[1.015]"
+                            onClick={() => setActiveLightboxImage(msg.images[0])}
+                          />
+                          {/* Image Actions Overlay on Hover */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                            <button 
+                              onClick={() => setActiveLightboxImage(msg.images[0])}
+                              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-200 shadow-lg border border-white/10 hover:scale-105 cursor-pointer"
+                              title="Zoom Image"
+                            >
+                              <Maximize2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => window.open(msg.images[0], "_blank")}
+                              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-200 shadow-lg border border-white/10 hover:scale-105 cursor-pointer"
+                              title="Open Original"
+                            >
+                              <ExternalLink size={18} />
+                            </button>
+                          </div>
+                        </div>
+                        {/* Bottom Info Bar */}
+                        <div className="px-4 py-3 bg-base-800/60 border-t border-white/[0.05] flex items-center justify-between text-xs text-base-400">
+                          <span className="font-sans font-medium text-base-500">AI Generated Image</span>
+                          <a 
+                            href={msg.images[0]} 
+                            download={`cortex-ai-${Date.now()}.png`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-base-300 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <Download size={13} />
+                            <span>Download</span>
+                          </a>
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      // Multiple Images (Search Results): Renders as a clean grid
+                      <div className="grid grid-cols-2 gap-3 max-w-[480px] w-full">
+                        {msg.images.map((imgUrl, imgIdx) => (
+                          <div 
+                            key={imgIdx} 
+                            className="relative group rounded-xl overflow-hidden border border-white/[0.07] bg-base-850 hover:border-white/[0.18] transition-all duration-300 shadow-md aspect-square"
+                          >
+                            <img 
+                              src={imgUrl} 
+                              alt={`Search result ${imgIdx + 1}`} 
+                              className="w-full h-full object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-103"
+                              onClick={() => setActiveLightboxImage(imgUrl)}
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1.5">
+                              <button 
+                                onClick={() => setActiveLightboxImage(imgUrl)}
+                                className="p-1.5 rounded-lg bg-black/60 text-white backdrop-blur-sm transition-colors border border-white/10 cursor-pointer"
+                              >
+                                <Maximize2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {(() => {
@@ -648,9 +679,30 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
             </div>
           );
         })}
-      </div>
     </div>
-  );
+
+    {/* Fullscreen Image Lightbox Modal */}
+    {activeLightboxImage && (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 cursor-zoom-out"
+        onClick={() => setActiveLightboxImage(null)}
+      >
+        <button 
+          className="absolute top-4 right-4 text-white hover:text-zinc-300 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+          onClick={() => setActiveLightboxImage(null)}
+        >
+          <X size={20} />
+        </button>
+        <img 
+          src={activeLightboxImage} 
+          alt="Fullscreen preview" 
+          className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl cursor-default border border-white/5"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    )}
+  </div>
+);
 };
 
 export default MessageArea;

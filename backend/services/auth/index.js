@@ -8,12 +8,16 @@ const app=express();
 app.use(cookieParser());
 app.use(express.json());
 
+// normal status check endpoint
 app.get("/", (req, res) => {
     console.log("Auth Service")
     return res.json({ message: "hello from auth service" });
 });
 
+// routes middleware setup
 app.use("/", authRouter);
+
+// db connect karke auth server start karne ka logic
 const StartServer=async()=>{
     try {
         await connectDB();

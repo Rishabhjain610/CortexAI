@@ -16,21 +16,21 @@ const ChatArea = ({
   isArtifactOpen,
   onToggleArtifact,
 }) => {
-  // Redux state se selected conversation ki ID fetch kar rahe hain.
+  // Redux se active chat/convo ID nikalne ke liye
   const selectedConversationId = useSelector(
     (state) => state.conversation.selectedConversationId
   );
   const dispatch = useDispatch();
 
-  // Local state variables: messages list, loading status, aur naye banaye gaye conversation ki ID tracking.
+  // normal states (messages list, loading state, aur naye convo ki tracking)
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [justCreatedConvoId, setJustCreatedConvoId] = useState(null);
   const justCreatedConvoIdRef = useRef(null);
 
-  // Jab conversation ID badalti hai, tab messaging history ko fetch ya reset karne wala useEffect.
+  // conversation change hone par messaging history load karne ka hook
   useEffect(() => {
-    // Agar koi conversation active nahi hai, toh turant ek naya conversation backend par create kar dete hain.
+    // agar koi conversation active nahi hai toh naya bana do
     if (!selectedConversationId) {
       const initNewConvo = async () => {
         setLoading(true);
@@ -49,14 +49,14 @@ const ChatArea = ({
       return;
     }
 
-    // Agar abhi-abhi naya conversation banaya gaya hai, toh database se dobara fetch karne ki zaroorat nahi hai.
+    // abhi naya convo bana hai toh db se reload karne ki need nahi hai
     if (selectedConversationId === justCreatedConvoIdRef.current) {
       justCreatedConvoIdRef.current = null;
       setJustCreatedConvoId(null);
       return;
     }
 
-    // Database se chat messages ko load karne ka helper function.
+    // db se chat messages load karne ka function
     const fetchMessages = async () => {
       setLoading(true);
       const data = await getMessages(selectedConversationId);
@@ -66,7 +66,7 @@ const ChatArea = ({
     fetchMessages();
   }, [selectedConversationId, justCreatedConvoId, dispatch]);
 
-  // User ke dwara naya message send hone par call hone wala function.
+  // message send karne par trigger hone wala main handler
   const handleSendMessage = async (text, options = {}) => {
     if (!text.trim()) return;
 
@@ -74,7 +74,7 @@ const ChatArea = ({
     let convoId = selectedConversationId;
     let isNewConvo = false;
 
-    // Backup safety check: agar convoId missing hai toh naya create kar do.
+    // check lagaya hai taaki agar convo ID na ho toh pehle convo create ho
     if (!convoId) {
       isNewConvo = true;
       setLoading(true);
@@ -92,7 +92,7 @@ const ChatArea = ({
       convoId = newId;
     }
 
-    // 1. User ka message turant UI me optimistically show karne ke liye add kar rahe hain.
+    // 1. user ka text turant UI me show karne ke liye dummy message array me push
     const tempUserMsg = {
       role: "user",
       content: text,
@@ -100,7 +100,7 @@ const ChatArea = ({
     };
     setMessages((prev) => [...prev, tempUserMsg]);
 
-    // 2. AI response stream karne ke liye ek empty initial AI message UI me add kar rahe hain.
+    // 2. AI stream load hone se pehle blank structure insert
     const tempAiMsgId = `ai-${Date.now()}`;
     const tempAiMsg = {
       role: "assistant",
@@ -113,7 +113,7 @@ const ChatArea = ({
     let accumulatedImages = [];
     let accumulatedArtifacts = [];
 
-    // 3. Backend (LangGraph agent) se live output stream receive karne ke liye sendMessage invoke kar rahe hain.
+    // 3. agent service se real-time chunks pull karna
     await sendMessage(convoId, text, options, (chunk) => {
       if (chunk.text) {
         accumulatedText += chunk.text;
@@ -134,23 +134,23 @@ const ChatArea = ({
     });
 
     if (accumulatedText) {
-      // 4. Poora response stream ho jaane ke baad pure message ko database me save karenge.
+      // 4. complete message generate hone par use database me save karenge
       await saveMessage(convoId, accumulatedText, "assistant", accumulatedImages, accumulatedArtifacts);
     }
 
-    // Agar model ne naya artifact generate kiya hai, toh usko right-side panel me automatically select aur open kar do.
+    // code/artifact banne par right drawer auto open
     if (accumulatedArtifacts.length > 0) {
       dispatch(setSelectedArtifact(accumulatedArtifacts[0]));
       dispatch(setArtifactOpen(true));
     }
 
-    // 5. User/Assistant message IDs ko sync karne ke liye, fresh messages list db se reload karte hain.
+    // 5. final IDs fetch aur state update
     const updatedMessages = await getMessages(convoId);
     if (updatedMessages) {
       setMessages(updatedMessages);
     }
 
-    // Agar ye new conversation ka pehla message tha, toh sidebar update karenge taaki sahi chat title dikhe.
+    // first message hone par sidebar refreshes
     if (isNewConvo || isFirstMessage) {
       const convos = await getConversations();
       if (convos) {
@@ -161,7 +161,7 @@ const ChatArea = ({
 
   return (
     <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-base-900">
-      {/* Top Navbar */}
+      {/* Top Navbar display */}
       <Navbar
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={onToggleSidebar}
@@ -169,14 +169,14 @@ const ChatArea = ({
         onToggleArtifact={onToggleArtifact}
       />
 
-      {/* Message scrolling area */}
+      {/* chat window messaging list area */}
       <MessageArea
         messages={messages}
         loading={loading}
         selectedConversationId={selectedConversationId || justCreatedConvoId}
       />
 
-      {/* Bottom text composer area */}
+      {/* input write area container */}
       <ChatInput
         onSendMessage={handleSendMessage}
         disabled={false}

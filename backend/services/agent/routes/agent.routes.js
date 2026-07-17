@@ -3,6 +3,7 @@ import { agent } from "../controller/agent.controller.js";
 
 const router = express.Router();
 
+// dynamic server health status endpoint
 router.get("/health", (req, res) => {
   return res.status(200).json({
     success: true,
@@ -10,6 +11,7 @@ router.get("/health", (req, res) => {
   });
 });
 
+// agent interaction endpoint
 router.post("/chat", agent);
 
 export default router;

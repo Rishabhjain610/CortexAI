@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { X, Eye, Code, Download, Copy, Check, FileText } from "lucide-react";
 import { setArtifactOpen, updateArtifactFileContent } from "../redux/conversationSlice";
 import Editor from "@monaco-editor/react";
 
-// Yeh function file ke extension ke hisab se Monaco Editor ke liye sahi language type batata hai.
+// file name check karke monaco editor ke liye language set karne ke liye
 const getMonacoLanguage = (fileName) => {
   if (!fileName) return "javascript";
   const name = fileName.toLowerCase();
@@ -17,69 +17,81 @@ const getMonacoLanguage = (fileName) => {
   return "plaintext";
 };
 
+// html, css, aur js ko combine karke single page html source code ready karne ka logic
+const compileSrcDocDirect = (filesList) => {
+  if (!filesList || filesList.length === 0) return "";
+  const htmlFile = filesList.find(f => f.name.endsWith(".html")) || filesList[0];
+  let htmlContent = htmlFile ? htmlFile.content : "";
+  
+  if (!htmlFile || !htmlFile.name.endsWith(".html")) {
+    return `<html><body><pre>${htmlContent}</pre></body></html>`;
+  }
+  
+  const cssFile = filesList.find(f => f.name.endsWith(".css"));
+  const cssContent = cssFile ? cssFile.content : "";
+  const jsFile = filesList.find(f => f.name.endsWith(".js"));
+  const jsContent = jsFile ? jsFile.content : "";
+  
+  const styleTag = cssContent ? `<style>${cssContent}</style>` : "";
+  if (htmlContent.includes("</head>")) {
+    htmlContent = htmlContent.replace("</head>", `${styleTag}</head>`);
+  } else {
+    htmlContent = htmlContent + styleTag;
+  }
+  
+  const scriptTag = jsContent ? `<script>${jsContent}</script>` : "";
+  if (htmlContent.includes("</body>")) {
+    htmlContent = htmlContent.replace("</body>", `${scriptTag}</body>`);
+  } else {
+    htmlContent = htmlContent + scriptTag;
+  }
+  
+  return htmlContent;
+};
+
 const Artifact = ({ isOpen, onClose }) => {
-  // Redux state se selected artifact aur dispatch function le rahe hain.
+  // Redux se active artifact details uthane ke liye
   const selectedArtifact = useSelector((state) => state.conversation.selectedArtifact);
   const dispatch = useDispatch();
 
-  // Component local states: active tab (preview/code), active file tab index, copy message indicator, aur iframe ke liye source code.
+  // normal states define kiye hain (tab, file index, copy state, aur iframe source doc)
   const [activeTab, setActiveTab] = useState("preview");
   const [activeFileIdx, setActiveFileIdx] = useState(0);
   const [copied, setCopied] = useState(false);
   const [previewSrcDoc, setPreviewSrcDoc] = useState("");
 
+  const lastLoadedArtifactIdRef = useRef(null);
+
   const { title, files } = selectedArtifact || {};
   const currentFile = files?.[activeFileIdx] || files?.[0] || { name: "No File", content: "" };
   const hasHtml = files?.some(f => f.name.endsWith(".html"));
 
-  // HTML, CSS, aur JS files ko combine karke ek single HTML structure banane wala function.
-  const compileSrcDoc = () => {
-    if (!files || files.length === 0) return "";
-    const htmlFile = files.find(f => f.name.endsWith(".html")) || files[0];
-    let htmlContent = htmlFile ? htmlFile.content : "";
-    
-    if (!htmlFile || !htmlFile.name.endsWith(".html")) {
-      return `<html><body><pre>${htmlContent}</pre></body></html>`;
-    }
-    
-    const cssFile = files.find(f => f.name.endsWith(".css"));
-    const cssContent = cssFile ? cssFile.content : "";
-    const jsFile = files.find(f => f.name.endsWith(".js"));
-    const jsContent = jsFile ? jsFile.content : "";
-    
-    const styleTag = cssContent ? `<style>${cssContent}</style>` : "";
-    if (htmlContent.includes("</head>")) {
-      htmlContent = htmlContent.replace("</head>", `${styleTag}</head>`);
-    } else {
-      htmlContent = htmlContent + styleTag;
-    }
-    
-    const scriptTag = jsContent ? `<script>${jsContent}</script>` : "";
-    if (htmlContent.includes("</body>")) {
-      htmlContent = htmlContent.replace("</body>", `${scriptTag}</body>`);
-    } else {
-      htmlContent = htmlContent + scriptTag;
-    }
-    
-    return htmlContent;
-  };
+  const compileSrcDoc = () => compileSrcDocDirect(files);
 
-  // Naya artifact load hone par tab aur file indices ko reset karne wala hook.
+  // jab user doosra artifact load karega tab state reset karne ka useEffect
+  // ref check lagaya hai taaki typing ke time bar bar page refresh ya reset na ho
   useEffect(() => {
-    if (selectedArtifact?.files?.length > 0) {
-      setActiveFileIdx(0);
-      const hasHtml = selectedArtifact.files.some(f => f.name.endsWith(".html"));
-      const initialTab = hasHtml ? "preview" : "code";
-      setActiveTab(initialTab);
-      
-      // Agar direct preview pe jaa rahe hain, toh immediate compile kar do.
-      if (initialTab === "preview") {
-        setPreviewSrcDoc(compileSrcDoc());
+    if (selectedArtifact) {
+      if (selectedArtifact.id !== lastLoadedArtifactIdRef.current) {
+        lastLoadedArtifactIdRef.current = selectedArtifact.id;
+        
+        if (selectedArtifact.files?.length > 0) {
+          setActiveFileIdx(0);
+          const hasHtml = selectedArtifact.files.some(f => f.name.endsWith(".html"));
+          const initialTab = hasHtml ? "preview" : "code";
+          setActiveTab(initialTab);
+          
+          if (initialTab === "preview") {
+            setPreviewSrcDoc(compileSrcDocDirect(selectedArtifact.files));
+          }
+        }
       }
+    } else {
+      lastLoadedArtifactIdRef.current = null;
     }
   }, [selectedArtifact]);
 
-  // Tab switch karne par agar 'preview' tab chuna hai toh live code compile karke iframe load karenge.
+  // tab switch logic - jab tab preview ho tabhi code compile karenge
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === "preview") {
@@ -87,7 +99,7 @@ const Artifact = ({ isOpen, onClose }) => {
     }
   };
 
-  // Clipboard me code copy karne ka function.
+  // current active file ka content clipboard me copy karne ke liye
   const handleCopy = () => {
     if (!currentFile) return;
     navigator.clipboard.writeText(currentFile.content);
@@ -95,7 +107,7 @@ const Artifact = ({ isOpen, onClose }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Files ko local download karne wala function.
+  // saari files ko download karne ka function
   const handleDownload = () => {
     if (!files || files.length === 0) return;
     files.forEach((file) => {
@@ -109,7 +121,7 @@ const Artifact = ({ isOpen, onClose }) => {
     });
   };
 
-  // Agar selected artifact nahi hai toh prompt render karenge.
+  // fallback agar koi active artifact selected nahi hai layout me
   if (!selectedArtifact) {
     return (
       <div
@@ -136,7 +148,7 @@ const Artifact = ({ isOpen, onClose }) => {
       }`}
     >
       <div className="w-full sm:w-96 xl:w-[480px] flex flex-col h-full flex-shrink-0">
-        {/* Header aur metadata details */}
+        {/* Top header aur meta information header */}
         <div className="h-14 border-b border-zinc-800/80 bg-zinc-900/40 px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1 bg-indigo-900/30 border border-indigo-850 rounded text-indigo-400">
@@ -155,7 +167,7 @@ const Artifact = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Tab switcher options (Preview aur Code buttons) */}
+        {/* Preview aur Code tabs select karne ke buttons */}
         <div className="px-4 py-2 border-b border-zinc-800/50 bg-zinc-900/20 flex items-center justify-between">
           <div className="flex gap-2">
             {hasHtml && (
@@ -185,7 +197,7 @@ const Artifact = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Workspace file tabs */}
+        {/* Files list ke tabs dikhane ke liye */}
         {activeTab === "code" && files && files.length > 0 && (
           <div className="flex border-b border-zinc-800/80 bg-zinc-900/40 overflow-x-auto shrink-0 select-none">
             {files.map((file, idx) => (
@@ -209,7 +221,7 @@ const Artifact = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Main Content Area (Monaco Editor or Iframe Preview) */}
+        {/* Beech ka block - ya toh Iframe preview dikhega ya Monaco editor */}
         <div className="flex-1 overflow-y-auto p-4 bg-zinc-950 flex flex-col min-h-0">
           {activeTab === "preview" && hasHtml ? (
             <div className="w-full h-full bg-white rounded-lg overflow-hidden border border-zinc-800 shadow-lg">
@@ -250,7 +262,7 @@ const Artifact = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Footer buttons (Copy aur Download) */}
+        {/* Bottom ke actions (Copy aur Download buttons) */}
         <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/40 flex items-center justify-end gap-2 shrink-0">
           <button
             onClick={handleCopy}

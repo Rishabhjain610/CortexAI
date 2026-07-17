@@ -66,7 +66,22 @@ Use this current time as reference when answering time-sensitive questions (like
     content += chunk.content;
   }
 
+  // output me LLM source information include check so user can see it
+  let llmInfo = `[LLM Called: Ollama (Minimax) for chat tasks.]`;
+  if (state.searchResults && Array.isArray(state.searchResults) && state.searchResults.length > 0) {
+    llmInfo += `\n[Web Search Executed: Found ${state.searchResults.length} results]\n` + 
+      state.searchResults.map((res, idx) => `  - Result ${idx + 1}: ${res.title} (${res.url})`).join("\n");
+  }
+  console.log(`Chat Agent executed: ${llmInfo}`);
+
+  let finalContent = content;
+  if (finalContent.includes("<think>")) {
+    finalContent = finalContent.replace("<think>", `<think>${llmInfo}\n`);
+  } else {
+    finalContent = `<think>${llmInfo}</think>\n` + finalContent;
+  }
+
   return {
-    aiResponse: content,
+    aiResponse: finalContent,
   };
 };
