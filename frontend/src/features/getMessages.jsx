@@ -1,5 +1,6 @@
 import api from "../utils/api";
 
+// Kisi specific conversation ke logs aur messages list download karne wala call.
 const getMessages = async (conversationId) => {
   try {
     const response = await api.get(`/api/chat/get-messages/${conversationId}`);

@@ -1,4 +1,6 @@
 import api from "../utils/api";
+
+// Active user session authentication check karne ka endpoint trigger.
 const getCurrentUser = async () => {
     try {
         const response = await api.get('api/me');

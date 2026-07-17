@@ -1,5 +1,6 @@
 import api from "../utils/api";
 
+// Backend API call karke kisi specific conversation ko delete karne ka helper function.
 const deleteConversation = async (conversationId) => {
   try {
     const response = await api.delete(

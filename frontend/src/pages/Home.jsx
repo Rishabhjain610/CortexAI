@@ -4,42 +4,45 @@ import { signInWithPopup, googleProvider, auth } from "../utils/firebase.js";
 
 import { useSelector, useDispatch } from 'react-redux';
 import { setUserData } from '../redux/userSlice.js';
+import { setArtifactOpen } from '../redux/conversationSlice.js';
 
-// Import the 3 new components
+// Screen components ko import kar rahe hain (Sidebar, Chat content zone, and Right artifact side-drawer).
 import SideBar from '../components/SideBar.jsx';
 import ChatArea from '../components/ChatArea.jsx';
 import Artifact from '../components/Artifact.jsx';
 
-
 const Home = () => {
+  // Redux state se user login information aur artifact container status check kar rahe hain.
   const user = useSelector((state) => state.user.userData);
+  const isArtifactOpen = useSelector((state) => state.conversation.isArtifactOpen);
   const dispatch = useDispatch();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isArtifactOpen, setIsArtifactOpen] = useState(false);
 
+  // Screen size check karke Sidebar aur Artifact panel ki default visibility responsive tarike se manage karne wala hook.
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setIsSidebarOpen(true);
-        setIsArtifactOpen(true);
+        dispatch(setArtifactOpen(true));
       } else {
         setIsSidebarOpen(false);
-        setIsArtifactOpen(false);
+        dispatch(setArtifactOpen(false));
       }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [dispatch]);
 
+  // Google account pop-up ke zariye user login authentication trigger karne wala trigger.
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const token = await result.user.getIdToken();
       console.log("Firebase ID Token:", token);
 
-      // Send the token to the backend API gateway
+      // Backend API gateway ko token verify karne ke liye request send kar rahe hain.
       const response = await api.post('/api/auth/login', { token });
       
       dispatch(setUserData(response.data.user));
@@ -49,6 +52,7 @@ const Home = () => {
     }
   }
 
+  // Active session logout karne ka helper function.
   const handleLogout = async () => {
     try {
       await api.post('/api/auth/logout', {});
@@ -63,7 +67,7 @@ const Home = () => {
     <div className="w-screen h-screen flex overflow-hidden bg-base-900">
       {user ? (
         <div className="flex flex-1 overflow-hidden relative">
-          {/* Mobile overlay */}
+          {/* Mobile screen list overlay layer */}
           {isSidebarOpen && (
             <div
               className="fixed inset-0 z-30 lg:hidden bg-black/60"
@@ -71,6 +75,7 @@ const Home = () => {
             />
           )}
 
+          {/* Left panel chat selector sidebar */}
           <SideBar
             user={user}
             onLogout={handleLogout}
@@ -78,28 +83,30 @@ const Home = () => {
             onClose={() => setIsSidebarOpen(false)}
           />
 
+          {/* Middle panel central messaging area */}
           <ChatArea
             isSidebarOpen={isSidebarOpen}
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isArtifactOpen={isArtifactOpen}
-            onToggleArtifact={() => setIsArtifactOpen(!isArtifactOpen)}
+            onToggleArtifact={() => dispatch(setArtifactOpen(!isArtifactOpen))}
           />
 
+          {/* Right side live workspace builder drawer */}
           <Artifact
             isOpen={isArtifactOpen}
-            onClose={() => setIsArtifactOpen(false)}
+            onClose={() => dispatch(setArtifactOpen(false))}
           />
         </div>
       ) : (
+        /* Sign-in screen jab user authenticated na ho */
         <div className="flex-1 flex flex-col items-center justify-center p-6 bg-base-900 w-full h-full">
           <div className="p-8 rounded-2xl text-center w-full max-w-[360px] bg-base-850 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.5)] flex flex-col items-center">
-            {/* Logo */}
+            {/* CortexAI Logo */}
             <div className="mb-5">
               <svg width="42" height="42" viewBox="0 0 36 36" fill="none">
                 <rect width="36" height="36" rx="9" fill="#7c7ec8"/>
                 <path d="M10 18c0-4.42 3.58-8 8-8 2.58 0 4.88 1.22 6.36 3.12L21.6 14.6A5.5 5.5 0 0 0 18 13a5 5 0 0 0 0 10 5.5 5.5 0 0 0 3.6-1.6l2.76 1.52A7.97 7.97 0 0 1 18 26c-4.42 0-8-3.58-8-8Z" fill="white"/>
               </svg>
-
             </div>
 
             <h1 className="font-sans font-semibold text-[22px] text-base-100 mb-2 tracking-tight">

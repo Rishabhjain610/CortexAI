@@ -1,3 +1,4 @@
+// Current logged-in user profile decode and return karne wala gateway endpoint.
 export const getMe = async (req, res) => {
   try {
     return res.status(200).json({ user: req.user });

@@ -8,5 +8,5 @@ export const AgentState=Annotation.Root({
     conversationId:Annotation(),
     history:Annotation(),
     model:Annotation(),
-    webSearch:Annotation()
+    images:Annotation()
 })

@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Plus, MessageSquare, Trash2, Settings, LogOut } from "lucide-react";
-import createConversation from "../features/createConversation";
 import getConversations from "../features/getCoverations";
 import deleteConversation from "../features/deleteConversation";
 import {
@@ -9,7 +8,7 @@ import {
 } from "../redux/conversationSlice";
 
 
-/* CortexAI logo mark */
+/* CortexAI logo mark component */
 const Mark = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className="shrink-0">
     <rect width="36" height="36" rx="9" fill="#7c7ec8" />
@@ -19,23 +18,45 @@ const Mark = ({ size = 20 }) => (
 );
 
 const SideBar = ({ user, onLogout, isOpen }) => {
+  // Redux state se pure conversations ki list aur selected chat ID fetch kar rahe hain.
   const chats      = useSelector(s => s.conversation.conversations);
   const selectedId = useSelector(s => s.conversation.selectedConversationId);
   const dispatch   = useDispatch();
+  const isInitialLoad = useRef(true);
 
+  // App load hone par saare active chats download karke Redux state me daalne wala hook.
+  // Agar database me pehle se chat saved hain aur selected ID empty hai, toh sabse pehli chat ko select kar lega.
   useEffect(() => {
-    getConversations().then(d => dispatch(setConversations(d)));
-  }, [dispatch]);
+    getConversations().then(d => {
+      dispatch(setConversations(d));
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+        if (d && d.length > 0 && !selectedId) {
+          dispatch(setSelectedConversationId(d[0]._id || d[0].id));
+        }
+      }
+    });
+  }, [dispatch, selectedId]);
 
-  const create = async () => {
-    const c = await createConversation();
-    if (c) dispatch(addConversation(c));
+  // Naya chat room reset karne wala helper button command.
+  const create = () => {
+    dispatch(setSelectedConversationId(null));
   };
 
+  // Kisi purani chat ko delete karne aur UI ko refresh karne ka helper function.
   const remove = async (id, e) => {
     e.stopPropagation();
     const ok = await deleteConversation(id);
-    if (ok) dispatch(removeConversation(id));
+    if (ok) {
+      dispatch(removeConversation(id));
+      // Agar delete ki gayi chat abhi open thi, toh bachhi hui list me se pehli chat open kar do.
+      if (id === selectedId) {
+        const remaining = chats.filter(c => (c._id || c.id) !== id);
+        if (remaining.length > 0) {
+          dispatch(setSelectedConversationId(remaining[0]._id || remaining[0].id));
+        }
+      }
+    }
   };
 
   return (
@@ -48,7 +69,7 @@ const SideBar = ({ user, onLogout, isOpen }) => {
     `}>
       <div className="w-[248px] flex flex-col h-full">
 
-        {/* Logo */}
+        {/* Logo and branding zone */}
         <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
           <Mark size={22} />
           <span className="font-sans font-semibold text-[15px] text-base-100 tracking-tight">
@@ -56,7 +77,7 @@ const SideBar = ({ user, onLogout, isOpen }) => {
           </span>
         </div>
 
-        {/* New chat */}
+        {/* New chat creator trigger button */}
         <div className="px-3 pb-3">
           <button
             onClick={create}
@@ -69,7 +90,7 @@ const SideBar = ({ user, onLogout, isOpen }) => {
           </button>
         </div>
 
-        {/* Chat list */}
+        {/* Recent Chat listing column */}
         <div className="flex-1 overflow-y-auto px-2 min-h-0">
           {chats.length > 0 && (
             <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-base-500">
@@ -108,32 +129,43 @@ const SideBar = ({ user, onLogout, isOpen }) => {
           })}
         </div>
 
-        {/* Footer */}
+        {/* User profile, settings and logout drawer footer */}
         <div className="border-t border-white/[0.07] px-2 pt-2 pb-3 space-y-0.5">
-          <button className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-base-400 hover:text-base-200 hover:bg-white/[0.04] cursor-pointer transition-colors">
-            <Settings size={13} strokeWidth={1.75} />
-            Settings
+          <button
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[13px] text-base-450
+              hover:bg-white/[0.04] hover:text-base-200 transition-colors duration-100 cursor-pointer"
+          >
+            <Settings size={13} />
+            <span>Settings</span>
           </button>
-          <button onClick={onLogout} className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-base-400 hover:text-red-400 hover:bg-red-950/30 cursor-pointer transition-colors">
-            <LogOut size={13} strokeWidth={1.75} />
-            Sign out
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[13px] text-base-450
+              hover:bg-white/[0.04] hover:text-red-400/90 transition-colors duration-100 cursor-pointer"
+          >
+            <LogOut size={13} />
+            <span>Sign out</span>
           </button>
 
-          {/* User row */}
-          <div className="mt-2 flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-base-850 border border-white/[0.07]">
-            <img
-              src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || "CX")}&backgroundColor=6e76c8&textColor=ffffff`}
-              alt=""
-              className="w-7 h-7 rounded-full object-cover shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-medium text-base-200 truncate">{user?.name || "User"}</p>
-              <p className="text-[10px] text-base-400 truncate">{user?.email || ""}</p>
+          {/* User profile details badge card */}
+          {user && (
+            <div className="flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+              <div className="w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-semibold text-indigo-400">
+                {user.email ? user.email[0].toUpperCase() : "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11.5px] font-medium text-base-200 truncate">
+                  {user.displayName || "User"}
+                </p>
+                <p className="text-[9.5px] text-base-500 truncate mt-0.5">
+                  {user.email || ""}
+                </p>
+              </div>
+              <span className="text-[8.5px] font-semibold tracking-wider uppercase px-1.5 py-0.5 bg-white/[0.06] rounded border border-white/[0.05] text-base-400">
+                Free
+              </span>
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-accent-100 text-accent-500 border border-accent-200 shrink-0">
-              {user?.plan || "free"}
-            </span>
-          </div>
+          )}
         </div>
 
       </div>

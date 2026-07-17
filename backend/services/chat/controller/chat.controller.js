@@ -2,6 +2,7 @@ import { conversationModel } from "../models/conversation.model.js";
 import { messageModel } from "../models/message.model.js";
 import redis from "../../../shared/redis/redis.js";
 
+// Naya conversation record MongoDB me create karne ka controller.
 export const createConversation = async (req, res) => {
   try {
     const conversation = await conversationModel.create({
@@ -22,6 +23,7 @@ export const createConversation = async (req, res) => {
   }
 };
 
+// Kisi user ke saare active conversations MongoDB se fetch karne ka endpoint.
 export const getConversations = async (req, res) => {
   try {
     const conversations = await conversationModel
@@ -29,6 +31,7 @@ export const getConversations = async (req, res) => {
         userId: req.headers["x-user-id"],
       })
       .sort({ updatedAt: -1 });
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     return res.status(200).json({
       success: true,
       message: "Conversations fetched",
@@ -43,13 +46,16 @@ export const getConversations = async (req, res) => {
   }
 };
 
+// AI ya user ka naya message MongoDB aur Redis cache dono me update karne ka controller.
 export const saveMessage = async (req, res) => {
   try {
-    const { conversationId, content, role } = req.body;
+    const { conversationId, content, role, images, artifacts } = req.body;
     const savedMessage = await messageModel.create({
       conversation: conversationId,
       content,
       role: role || "user",
+      images: images || [],
+      artifacts: artifacts || [],
     });
 
     // Active conversation ka cache agar Redis mein pehle se bana hua hai,
@@ -60,7 +66,7 @@ export const saveMessage = async (req, res) => {
       let messages = JSON.parse(cached);
       messages.push(savedMessage);
       
-      // Sirf latest 20 messages hi save karenge Redis mein
+      // Sirf latest 20 messages hi save karenge Redis mein.
       if (messages.length > 20) {
         messages = messages.slice(-20);
       }
@@ -81,13 +87,15 @@ export const saveMessage = async (req, res) => {
     });
   }
 };
+
+// Conversation ka title update karne ka function (jaise chat rename karna).
 export const updateConversation = async (req, res) => {
   try {
     const { conversationId, title } = req.body;
     const updatedConversation = await conversationModel.findByIdAndUpdate(
       conversationId,
       { title },
-      { new: true },
+      { returnDocument: 'after' },
     );
     return res.status(200).json({
       success: true,
@@ -103,6 +111,7 @@ export const updateConversation = async (req, res) => {
   }
 };
 
+// Kisi conversation ko database se permanent delete karne ka controller.
 export const deleteConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -122,6 +131,9 @@ export const deleteConversation = async (req, res) => {
     });
   }
 };
+
+// Kisi specific conversation ke messages load karne ka endpoint.
+// Yeh controller pehle Redis cache check karta hai (Cache Hit), agar wahan nahi milta toh MongoDB se fetch karta hai (Cache Miss).
 export const getMessage = async (req, res) => {
   try {
     const { conversationId } = req.params;

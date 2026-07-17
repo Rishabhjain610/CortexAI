@@ -10,6 +10,7 @@ import {
 
 const router = express.Router();
 
+// Chat service ke REST endpoints mapping rules.
 router.post("/create-conversation", createConversation);
 router.get("/get-conversations", getConversations);
 router.put("/update-conversation", updateConversation);

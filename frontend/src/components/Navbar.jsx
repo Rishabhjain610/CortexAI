@@ -1,10 +1,11 @@
 import React from "react";
 import { Menu, PanelRight, ChevronDown } from "lucide-react";
 
+// Top navigation bar component: isme Sidebar aur Right Artifact side drawer ko toggle karne ke buttons hain.
 const Navbar = ({ isSidebarOpen, onToggleSidebar, isArtifactOpen, onToggleArtifact }) => (
   <header className="h-11 flex items-center justify-between px-3 shrink-0 border-b border-white/[0.07]">
 
-    {/* Left */}
+    {/* Left section: Sidebar toggle aur Branding label */}
     <div className="flex items-center gap-1">
       {!isSidebarOpen && (
         <button
@@ -21,7 +22,7 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar, isArtifactOpen, onToggleArtifa
       </button>
     </div>
 
-    {/* Right */}
+    {/* Right section: Artifact sidebar toggle button */}
     <button
       onClick={onToggleArtifact}
       className={`w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer transition-colors

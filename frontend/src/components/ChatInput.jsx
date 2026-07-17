@@ -12,6 +12,7 @@ import {
   Image,
 } from "lucide-react";
 
+// Platform ke support karne wale Models aur Agents ki static list.
 const MODELS = [
   { id: "CortexAI", label: "CortexAI", sub: "Fast · accurate" },
   { id: "CortexAI Pro", label: "CortexAI Pro", sub: "Most capable" },
@@ -28,6 +29,7 @@ const AGENTS = [
 ];
 
 const ChatInput = ({ onSendMessage, disabled }) => {
+  // Input local state variables: draft message text, model picker visibility, selected model name, active agent type, and composer focus state.
   const [text, setText] = useState("");
   const [showModels, setShowModels] = useState(false);
   const [model, setModel] = useState("CortexAI");
@@ -37,7 +39,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
   const areaRef = useRef(null);
   const dropRef = useRef(null);
 
-  /* Close model dropdown on outside click */
+  // Model selection menu ke bahar click karne par use band karne ka trigger.
   useEffect(() => {
     const fn = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target))
@@ -47,6 +49,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  // Textarea input text ke size ke mutabik height adjust karne ka helper function.
   const resize = useCallback(() => {
     const el = areaRef.current;
     if (!el) return;
@@ -54,12 +57,12 @@ const ChatInput = ({ onSendMessage, disabled }) => {
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, []);
 
+  // Message compose complete hone ke baad compile karke event trigger karne wala function.
   const send = () => {
     const t = text.trim();
     if (!t || disabled) return;
     onSendMessage(t, {
       model,
-      webSearch: selectedAgent === "searchAgent",
       agent: selectedAgent,
     });
     setText("");
@@ -68,8 +71,10 @@ const ChatInput = ({ onSendMessage, disabled }) => {
 
   const canSend = !disabled && text.trim().length > 0;
 
-  const toolBtn = (active, label, icon, onClick) => (
+  // Agent switcher button render karne wala helper method, jisme key mapping correct rakhi gayi hai.
+  const toolBtn = (key, active, label, icon, onClick) => (
     <button
+      key={key}
       type="button"
       onClick={onClick}
       disabled={disabled}
@@ -89,13 +94,13 @@ const ChatInput = ({ onSendMessage, disabled }) => {
   return (
     <div className="shrink-0 flex justify-center px-4 pb-5 pt-1">
       <div className="w-full max-w-[880px] space-y-1.5">
-        {/* Input card */}
+        {/* Main Input container card style wrapper */}
         <div
           className={`flex flex-col rounded-2xl overflow-hidden transition-all duration-150
           bg-base-850 border
           ${focused ? "border-accent-500/40 shadow-[0_0_0_3px_rgba(110,118,200,0.08),0_8px_28px_rgba(0,0,0,0.4)]" : "border-white/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"}`}
         >
-          {/* Textarea */}
+          {/* Messages write Area textarea input */}
           <div className="px-4 pt-4 pb-2">
             <textarea
               ref={areaRef}
@@ -122,9 +127,9 @@ const ChatInput = ({ onSendMessage, disabled }) => {
             />
           </div>
 
-          {/* Toolbar */}
+          {/* Switch bars aur Model parameters list toolbar container */}
           <div className="flex items-center justify-between px-3 pb-3 gap-2">
-            {/* Left */}
+            {/* Toolbar icons on Left side */}
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
@@ -135,11 +140,13 @@ const ChatInput = ({ onSendMessage, disabled }) => {
                 <Paperclip size={15} strokeWidth={1.75} />
               </button>
 
-              {/* Divider */}
+              {/* Separator line */}
               <div className="w-px h-3.5 bg-white/[0.08] mx-1" />
 
+              {/* Saare available agents button switch items */}
               {AGENTS.map((agentItem) =>
                 toolBtn(
+                  agentItem.id,
                   selectedAgent === agentItem.id,
                   agentItem.label,
                   agentItem.icon,
@@ -148,10 +155,10 @@ const ChatInput = ({ onSendMessage, disabled }) => {
               )}
             </div>
 
-            {/* Right */}
+            {/* Model switch option and send button on Right side */}
             <div className="flex items-center gap-2">
 
-              {/* Model picker */}
+              {/* Model picker picker dropdown trigger */}
               <div className="relative" ref={dropRef}>
                 <button
                   type="button"
@@ -167,6 +174,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
                   />
                 </button>
 
+                {/* Dropdown elements list options */}
                 {showModels && (
                   <div className="absolute bottom-full right-0 mb-2 rounded-xl overflow-hidden z-50 min-w-[180px] bg-base-800 border border-white/[0.1] shadow-[0_12px_40px_rgba(0,0,0,0.55)]">
                     {MODELS.map((m) => (
@@ -194,7 +202,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
                 )}
               </div>
 
-              {/* Send */}
+              {/* Message submit button option */}
               <button
                 type="button"
                 onClick={send}
@@ -212,7 +220,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
           </div>
         </div>
 
-        {/* Disclaimer */}
+        {/* User disclaimer message */}
         <p className="text-center text-[11px] font-sans text-base-500">
           CortexAI can make mistakes. Verify important information.
         </p>

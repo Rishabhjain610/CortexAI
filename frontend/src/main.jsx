@@ -6,9 +6,11 @@ import { Provider } from "react-redux";
 import store from "./redux/store.js";
 import "./index.css";
 
+// React Root element trigger aur Redux/Routing setup initialization wrapper.
 createRoot(document.getElementById("root")).render(
   
     <BrowserRouter>
+      {/* React core state store ko components me access karne ke liye Provider wrap kiya */}
       <Provider store={store}>
         <App />
       </Provider>
