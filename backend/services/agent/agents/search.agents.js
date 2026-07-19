@@ -1,15 +1,19 @@
 import Search_tool from "../config/tavily.js";
 
-// Search Agent Node: Tavily API search tool use karke web se query parameters, references, aur images query fetch karta hai.
 // Clean query function: Prompt me se coding instructions aur conversational keywords ko strip karke core search subject nikalta hai.
-function cleanSearchQuery(prompt) {
+export function cleanSearchQuery(prompt) {
   if (!prompt) return "";
   let query = prompt.trim();
+
+  // Strip conversational helper words at the very beginning
+  const convoPrefixes = /^(can\s+you\s+|please\s+|could\s+you\s+|i\s+want\s+to\s+|i\s+need\s+to\s+|i\s+need\s+a\s+|write\s+a\s+|give\s+me\s+a\s+|give\s+me\s+|show\s+me\s+a\s+|show\s+me\s+|tell\s+me\s+about\s+)/i;
+  query = query.replace(convoPrefixes, "").trim();
   
   // Strip common prefixes
   const prefixes = [
-    /^(generate|make|create|build|design|search\s+for|search|google|find|lookup|look\s+up|gather\s+info\s+about|gather\s+info\s+for|gather\s+information\s+about|gather\s+information\s+for|who\s+is|biography\s+of|bio\s+of)\s+a\s+(portfolio\s+)?(website|webpage|page|app|profile|portfolio|resume|cv)\s+(for|about)\s+/i,
-    /^(generate|make|create|build|design|search\s+for|search|google|find|lookup|look\s+up|gather\s+info\s+about|gather\s+info\s+for|gather\s+information\s+about|gather\s+information\s+for|who\s+is|biography\s+of|bio\s+of)\s+(portfolio\s+)?(website|webpage|page|app|profile|portfolio|resume|cv|celebrity|adult\s+star)\s+(for|about|of)\s+/i,
+    /^(generate|make|create|build|design|search\s+for|search|google|find|lookup|look\s+up|gather\s+info\s+about|gather\s+info\s+for|gather\s+information\s+about|gather\s+information\s+for|who\s+is|biography\s+of|bio\s+of)\s+a\s+(portfolio\s+)?(website|webpage|page|app|profile|portfolio|resume|cv|pdf|presentation|presntation|presenation|presentaton|ppt|pptx|deck|slides|slide|slideshow|document|file)\s+(for|about|on|of)\s+/i,
+    /^(generate|make|create|build|design|search\s+for|search|google|find|lookup|look\s+up|gather\s+info\s+about|gather\s+info\s+for|gather\s+information\s+about|gather\s+information\s+for|who\s+is|biography\s+of|bio\s+of)\s+(portfolio\s+)?(website|webpage|page|app|profile|portfolio|resume|cv|pdf|presentation|presntation|presenation|presentaton|ppt|pptx|deck|slides|slide|slideshow|document|file|celebrity|adult\s+star)\s+(for|about|of|on)\s+/i,
+    /^(pdf|document|file|resume|cv|ppt|pptx|presentation|presntation|presenation|presentaton|deck|slides|slide|slideshow)\s+(on|about|of|for)\s+/i,
     /^(generate|make|create|build|design|search\s+for|search|google|find|lookup|look\s+up|gather\s+info\s+about|gather\s+info\s+for|gather\s+information\s+about|gather\s+information\s+for|who\s+is|biography\s+of|bio\s+of)\s+/i
   ];
 

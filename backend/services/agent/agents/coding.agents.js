@@ -135,25 +135,79 @@ Formatting Rules:
   // code generation json format parse
   if (intent === "code_generation") {
     let cleanedContent = content.trim();
-    if (cleanedContent.startsWith("```json")) {
-      cleanedContent = cleanedContent.substring(7);
-    } else if (cleanedContent.startsWith("```")) {
-      cleanedContent = cleanedContent.substring(3);
-    }
-    if (cleanedContent.endsWith("```")) {
-      cleanedContent = cleanedContent.substring(0, cleanedContent.length - 3);
-    }
-    cleanedContent = cleanedContent.trim();
+    // Strip thinking tags if any reasoning model was used
+    cleanedContent = cleanedContent.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+    cleanedContent = cleanedContent.replace(/<\/think>/gi, "").trim();
 
-    try {
-      const parsed = JSON.parse(cleanedContent);
-      if (parsed && Array.isArray(parsed.files)) {
-        filesList = parsed.files;
+    // Extract JSON object starting from first '{'
+    const firstBrace = cleanedContent.indexOf("{");
+    if (firstBrace !== -1) {
+      cleanedContent = cleanedContent.substring(firstBrace);
+    }
+
+    const closeUnterminatedJson = (jsonString) => {
+      let s = jsonString.trim();
+      if (s.endsWith('\\')) {
+        s = s.slice(0, -1);
       }
-    } catch (e) {
-      console.warn("Could not parse generated code JSON content:", e.message);
+      let inString = false;
+      let escape = false;
+      const stack = [];
+      for (let i = 0; i < s.length; i++) {
+        const char = s[i];
+        if (escape) { escape = false; continue; }
+        if (char === '\\') { escape = true; continue; }
+        if (char === '"') { inString = !inString; continue; }
+        if (!inString) {
+          if (char === '{' || char === '[') {
+            stack.push(char === '{' ? '}' : ']');
+          } else if (char === '}' || char === ']') {
+            if (stack.length > 0 && stack[stack.length - 1] === char) {
+              stack.pop();
+            }
+          }
+        }
+      }
+      if (inString) { s += '"'; }
+      while (stack.length > 0) {
+        const closeChar = stack.pop();
+        s = s.trim();
+        if (s.endsWith(',')) { s = s.slice(0, -1); }
+        s += closeChar;
+      }
+      return s;
+    };
+
+    const repairJson = (s) => {
+      let c = s.trim();
+      c = c.replace(/,\s*([}\]])/g, "$1");
+      c = c.replace(/([{,]\s*)'([^'\n]+)'\s*:/g, '$1"$2":');
+      c = c.replace(/:\s*'([^'\n]*)'/g, ': "$1"');
+      c = c.replace(/([\[,]\s*)'([^'\n]*)'/g, '$1"$2"');
+      c = c.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+      return c;
+    };
+
+    let parsedData = null;
+    try {
+      parsedData = JSON.parse(cleanedContent);
+    } catch {
+      try {
+        parsedData = JSON.parse(closeUnterminatedJson(cleanedContent));
+      } catch {
+        try {
+          parsedData = JSON.parse(repairJson(closeUnterminatedJson(cleanedContent)));
+        } catch (err) {
+          console.error("Could not parse generated code JSON content:", err.message);
+        }
+      }
+    }
+
+    if (parsedData && Array.isArray(parsedData.files)) {
+      filesList = parsedData.files;
     }
   }
+
 
   // output me LLM source information include check so user can see it
   let llmInfo = `[LLM Called: OpenRouter (DeepSeek) for coding tasks. Intent classification done via Groq (Qwen-3.6-27b).]`;

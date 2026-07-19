@@ -30,13 +30,18 @@ Expanse Rules:
 
   // Invoke model to get the enhanced prompt (without streaming tokens)
   const response = await llm.invoke(messages);
-  const enhancedPrompt = response.content.trim();
+  // Groq Qwen <think>...</think> tokens strip karo — sirf actual prompt rakho
+  const enhancedPrompt = (response.content || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .trim();
+
+  console.log("Enhanced image prompt:", enhancedPrompt);
 
   // Pollinations AI image generator URL setup kar rahe hain with the enhanced prompt
   const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}`;
   
   // Image download fetch query trigger to S3 buffer
-  const imageResponse = await axios.get(imageUrl, { responseType: "arraybuffer" });
+  const imageResponse = await axios.get(imageUrl, { responseType: "arraybuffer", timeout: 60000 });
   const buffer = Buffer.from(imageResponse.data);
   const filename = `image-${Date.now()}.png`;
   
@@ -49,7 +54,7 @@ Expanse Rules:
   console.log(`Image Agent executed: ${llmInfo}`);
 
   return {
-    aiResponse: `<think>${llmInfo}</think>`,
+    aiResponse: "",
     images: [downloadUrl],
   };
 };

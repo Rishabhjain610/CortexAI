@@ -42,23 +42,75 @@ workflow.addConditionalEdges(
 // Varna normal summarized conversation ke liye chatAgent default fallback hai.
 workflow.addConditionalEdges(
   "searchAgent",
-  (state) => {
+  async (state) => {
     const cleanPrompt = (state.prompt || "").trim().toLowerCase();
+    const matchKeyword = (keyword) => {
+      const escaped = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}s?\\b`, 'i');
+      return regex.test(cleanPrompt);
+    };
+
     const codingKeywords = [
-      "code", "program", "python", "javascript", "react", "html", "css", "java", 
+      "code", "coding", "program", "programming", "python", "javascript", "react", "html", "css", "java", 
       "c++", "c#", "ruby", "rust", "function", "compile", "debug", "error", "api", 
-      "database", "sql", "website", "webpage", "web page", "app", "application",
+      "database", "sql", "website", "webpage", "web page", "app", "apps", "application", "applications",
       "ui", "interface", "template", "page"
     ];
-    if (codingKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+    if (codingKeywords.some(matchKeyword)) {
       console.log("Search complete. Routing to codingAgent for code generation.");
       return "codingAgent";
     }
+    
+    const pdfKeyword = ["pdf", "pdfs", "document", "documents", "file", "files", "invoice", "resume", "cv", "paper"];
+    if (pdfKeyword.some(matchKeyword)) {
+      console.log("Search complete. Routing to pdfAgent for pdf summary.");
+      return "pdfAgent";
+    }
+    
+    const pptKeyword = ["presentation", "presentations", "presntation", "presenation", "presentaton", "slide", "slides", "powerpoint", "deck", "slideshow", "ppt", "pptx"];
+    if (pptKeyword.some(matchKeyword)) {
+      console.log("Search complete. Routing to pptAgent for presentation summary.");
+      return "pptAgent";
+    }
+    
+    // LLM Fallback routing using Ollama Minimax model
+    try {
+      const { getModel } = await import("../config/model.js");
+      const { SystemMessage, HumanMessage } = await import("@langchain/core/messages");
+      
+      const llm = getModel("chatAgent"); // local minimax model
+      const systemPrompt = `You are a routing agent for CortexAI.
+After a web search is completed, classify the user's original request into the correct final agent:
+- codingAgent: If the user wants a website, webpage, code, app, or template generated.
+- pdfAgent: If the user wants a document, report, resume, CV, or PDF file generated.
+- pptAgent: If the user wants a presentation, slide deck, PowerPoint, or slideshow generated.
+- chatAgent: For general questions, summaries, discussions, or normal chat.
+
+Reply with ONLY the agent name (one of: codingAgent, pdfAgent, pptAgent, chatAgent). No explanation, no quotes.`;
+
+      const response = await llm.invoke([
+        new SystemMessage(systemPrompt),
+        new HumanMessage(state.prompt || ""),
+      ]);
+
+      const classification = (response.content || "").trim().replace(/['\"`\n]/g, "");
+      const validAgents = ["codingAgent", "pdfAgent", "pptAgent", "chatAgent"];
+      
+      if (validAgents.includes(classification)) {
+        console.log(`Search complete. Routed by Minimax LLM to: ${classification}`);
+        return classification;
+      }
+    } catch (err) {
+      console.error("SearchAgent conditional edge LLM fallback failed, defaulting to chatAgent:", err.message);
+    }
+    
     console.log("Search complete. Routing to chatAgent for conversation.");
     return "chatAgent";
   },
   {
     codingAgent: "codingAgent",
+    pptAgent: "pptAgent",
+    pdfAgent: "pdfAgent",
     chatAgent: "chatAgent",
   }
 );

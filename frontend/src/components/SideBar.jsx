@@ -17,7 +17,7 @@ const Mark = ({ size = 20 }) => (
   </svg>
 );
 
-const SideBar = ({ user, onLogout, isOpen }) => {
+const SideBar = ({ user, onLogout, isOpen, onOpenUpgrade }) => {
   // Redux state se pure conversations ki list aur selected chat ID fetch kar rahe hain.
   const chats      = useSelector(s => s.conversation.conversations);
   const selectedId = useSelector(s => s.conversation.selectedConversationId);
@@ -132,11 +132,12 @@ const SideBar = ({ user, onLogout, isOpen }) => {
         {/* User profile, settings and logout drawer footer */}
         <div className="border-t border-white/[0.07] px-2 pt-2 pb-3 space-y-0.5">
           <button
+            onClick={onOpenUpgrade}
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[13px] text-base-450
               hover:bg-white/[0.04] hover:text-base-200 transition-colors duration-100 cursor-pointer"
           >
             <Settings size={13} />
-            <span>Settings</span>
+            <span>Settings / Subscription</span>
           </button>
           <button
             onClick={onLogout}
@@ -149,20 +150,24 @@ const SideBar = ({ user, onLogout, isOpen }) => {
 
           {/* User profile details badge card */}
           {user && (
-            <div className="flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+            <div 
+              onClick={onOpenUpgrade}
+              className="flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-150 cursor-pointer"
+              title="Click to manage subscription"
+            >
               <div className="w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-semibold text-indigo-400">
                 {user.email ? user.email[0].toUpperCase() : "U"}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[11.5px] font-medium text-base-200 truncate">
-                  {user.displayName || "User"}
+                  {user.name || "User"}
                 </p>
                 <p className="text-[9.5px] text-base-500 truncate mt-0.5">
-                  {user.email || ""}
+                  {user.credits ?? 100} credits
                 </p>
               </div>
-              <span className="text-[8.5px] font-semibold tracking-wider uppercase px-1.5 py-0.5 bg-white/[0.06] rounded border border-white/[0.05] text-base-400">
-                Free
+              <span className="text-[8.5px] font-semibold tracking-wider uppercase px-1.5 py-0.5 bg-indigo-500/10 rounded border border-indigo-500/20 text-indigo-400">
+                {user.plan || "Free"}
               </span>
             </div>
           )}

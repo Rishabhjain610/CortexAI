@@ -1,13 +1,36 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Zap, Code2, BookOpen, Check, Copy, Maximize2, X, Download, ExternalLink } from "lucide-react";
+import {
+  Zap,
+  Code2,
+  BookOpen,
+  Check,
+  Copy,
+  Maximize2,
+  X,
+  Download,
+  ExternalLink,
+  FileText,
+} from "lucide-react";
 import { useDispatch } from "react-redux";
-import { setSelectedArtifact, setArtifactOpen } from "../redux/conversationSlice";
+import {
+  setSelectedArtifact,
+  setArtifactOpen,
+} from "../redux/conversationSlice";
 
 // app logo svg markup
 const Mark = ({ size = 32 }) => (
-  <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className="shrink-0">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 36 36"
+    fill="none"
+    className="shrink-0"
+  >
     <rect width="36" height="36" rx="9" fill="#7c7ec8" />
-    <path d="M10 18c0-4.42 3.58-8 8-8 2.58 0 4.88 1.22 6.36 3.12L21.6 14.6A5.5 5.5 0 0 0 18 13a5 5 0 0 0 0 10 5.5 5.5 0 0 0 3.6-1.6l2.76 1.52A7.97 7.97 0 0 1 18 26c-4.42 0-8-3.58-8-8Z" fill="white" />
+    <path
+      d="M10 18c0-4.42 3.58-8 8-8 2.58 0 4.88 1.22 6.36 3.12L21.6 14.6A5.5 5.5 0 0 0 18 13a5 5 0 0 0 0 10 5.5 5.5 0 0 0 3.6-1.6l2.76 1.52A7.97 7.97 0 0 1 18 26c-4.42 0-8-3.58-8-8Z"
+      fill="white"
+    />
   </svg>
 );
 
@@ -93,7 +116,7 @@ const CodeBlock = ({ code, language }) => {
   return (
     <div className="relative p-4 bg-transparent min-h-[40px]">
       {/* syntax highlighted text layer (background) */}
-      <pre 
+      <pre
         ref={preRef}
         className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none whitespace-pre-wrap break-all overflow-hidden p-0 m-0 bg-transparent text-base-100 font-mono text-[13px] leading-relaxed select-none"
         dangerouslySetInnerHTML={{ __html: getHighlightedHtml() }}
@@ -123,7 +146,7 @@ const getFilesFromStream = (rawText) => {
   let match;
   while ((match = regex.exec(rawText)) !== null) {
     const name = match[1];
-    if (!files.some(f => f.name === name)) {
+    if (!files.some((f) => f.name === name)) {
       files.push({ name, status: "generating" });
     }
   }
@@ -137,10 +160,12 @@ const getFilesFromStream = (rawText) => {
         cleanText = cleanText.substring("code_generation".length).trim();
       }
       if (cleanText.startsWith("```")) {
-        cleanText = cleanText.replace(/^```[a-zA-Z]*\n/, "").replace(/\n```$/, "");
+        cleanText = cleanText
+          .replace(/^```[a-zA-Z]*\n/, "")
+          .replace(/\n```$/, "");
       }
       JSON.parse(cleanText);
-      files.forEach(f => f.status = "complete");
+      files.forEach((f) => (f.status = "complete"));
     } catch (e) {
       // stream chal raha hai
     }
@@ -152,7 +177,7 @@ const getFilesFromStream = (rawText) => {
 const FileBuilderStatus = ({ rawText, artifact }) => {
   const dispatch = useDispatch();
   const files = getFilesFromStream(rawText);
-  
+
   const handleOpenArtifact = () => {
     if (artifact && artifact.files && artifact.files.length > 0) {
       dispatch(setSelectedArtifact(artifact));
@@ -164,21 +189,25 @@ const FileBuilderStatus = ({ rawText, artifact }) => {
     return (
       <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] flex items-center gap-3">
         <div className="w-4 h-4 rounded-full border-2 border-accent-500 border-t-transparent animate-spin" />
-        <span className="text-xs font-sans text-base-400">Initializing project workspace...</span>
+        <span className="text-xs font-sans text-base-400">
+          Initializing project workspace...
+        </span>
       </div>
     );
   }
 
-  const isAllComplete = files.every(f => f.status === "complete");
+  const isAllComplete = files.every((f) => f.status === "complete");
 
   return (
-    <div 
+    <div
       onClick={handleOpenArtifact}
       className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] space-y-3 max-w-sm cursor-pointer hover:border-white/[0.15] transition-all hover:bg-white/[0.03]"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold font-sans text-base-200">
-          {isAllComplete ? "Workspace Assets Ready" : "Building Workspace Assets..."}
+          {isAllComplete
+            ? "Workspace Assets Ready"
+            : "Building Workspace Assets..."}
         </span>
         {!isAllComplete && (
           <span className="flex h-2 w-2 relative">
@@ -190,7 +219,10 @@ const FileBuilderStatus = ({ rawText, artifact }) => {
 
       <div className="space-y-2">
         {files.map((file, idx) => (
-          <div key={idx} className="flex items-center justify-between text-xs font-sans">
+          <div
+            key={idx}
+            className="flex items-center justify-between text-xs font-sans"
+          >
             <div className="flex items-center gap-2">
               <Code2 size={13} className="text-base-400" />
               <span className="text-base-350">{file.name}</span>
@@ -226,14 +258,14 @@ const TabbedFileViewer = ({ files, artifact }) => {
   const dispatch = useDispatch();
 
   if (!files || files.length === 0) return null;
-  
+
   const currentFile = files[activeTab] || files[0];
 
   const handleOpenSidebar = () => {
     const payload = artifact || {
       id: Date.now(),
       title: currentFile.name,
-      files: files
+      files: files,
     };
     dispatch(setSelectedArtifact(payload));
     dispatch(setArtifactOpen(true));
@@ -257,7 +289,7 @@ const TabbedFileViewer = ({ files, artifact }) => {
             </button>
           ))}
         </div>
-        
+
         <button
           onClick={handleOpenSidebar}
           className="flex items-center gap-1.5 text-[11px] font-sans text-base-400 hover:text-base-200 px-3 py-2 transition-colors cursor-pointer"
@@ -268,10 +300,10 @@ const TabbedFileViewer = ({ files, artifact }) => {
         </button>
       </div>
       <div className="bg-transparent">
-        <CodeBlock 
+        <CodeBlock
           key={currentFile.name}
-          code={currentFile.content} 
-          language={currentFile.name.split('.').pop()} 
+          code={currentFile.content}
+          language={currentFile.name.split(".").pop()}
         />
       </div>
     </div>
@@ -282,7 +314,7 @@ const TabbedFileViewer = ({ files, artifact }) => {
 function tryParseJSON(text) {
   if (!text) return null;
   let cleaned = text.trim();
-  
+
   if (cleaned.startsWith("```json")) {
     cleaned = cleaned.substring(7);
   } else if (cleaned.startsWith("```")) {
@@ -292,7 +324,7 @@ function tryParseJSON(text) {
     cleaned = cleaned.substring(0, cleaned.length - 3);
   }
   cleaned = cleaned.trim();
-  
+
   try {
     const parsed = JSON.parse(cleaned);
     if (parsed && Array.isArray(parsed.files)) {
@@ -308,14 +340,14 @@ function tryParseJSON(text) {
 function parseThinking(content) {
   const thinkRegex = /<(?:mm:)?think>([\s\S]*?)(<\/(?:mm:)?think>|$)/i;
   const match = content.match(thinkRegex);
-  
+
   if (match) {
     const thinking = match[1];
     const response = content.replace(thinkRegex, "").trim();
     const isThinking = !match[2]; // status check tag missing check
     return { thinking, response, isThinking };
   }
-  
+
   return { thinking: "", response: content, isThinking: false };
 }
 
@@ -330,18 +362,18 @@ const ThoughtBox = ({ content, active }) => {
       setCollapsed(true); // thinking complete hone par collapse status set
     }
   }, [active]);
-  
+
   return (
     <div className="border-l-2 border-base-700 pl-4 py-1 my-2 text-[13px] text-base-500 font-sans">
-      <button 
+      <button
         onClick={() => setCollapsed(!collapsed)}
         className="flex items-center gap-2 font-medium text-base-500 hover:text-base-300 transition-colors focus:outline-none cursor-pointer"
       >
-        <svg 
+        <svg
           className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`}
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
           strokeWidth="2.5"
         >
           <path d="M6 9l6 6 6-6" />
@@ -351,7 +383,7 @@ const ThoughtBox = ({ content, active }) => {
           <span className="w-1.5 h-1.5 rounded-full bg-accent-500 animate-ping" />
         )}
       </button>
-      
+
       {!collapsed && (
         <div className="mt-2 text-base-500 whitespace-pre-wrap leading-relaxed select-none">
           {content}
@@ -362,35 +394,59 @@ const ThoughtBox = ({ content, active }) => {
 };
 
 // Markdown tables, lists, code alerts, dynamic render component
-const Prose = ({ content }) => (
+const Prose = ({ content, onImageClick }) => (
   <div className="font-sans text-[15px] leading-relaxed text-base-200 font-normal space-y-3">
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
         p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
-        strong: ({ node, ...props }) => <strong className="font-semibold text-base-100" {...props} />,
+        strong: ({ node, ...props }) => (
+          <strong className="font-semibold text-base-100" {...props} />
+        ),
         em: ({ node, ...props }) => <em className="italic" {...props} />,
-        img: () => null,
+        img: ({ node, src, alt, ...props }) => (
+          <div className="my-4 max-w-[400px] rounded-xl overflow-hidden border border-white/[0.08] shadow-md group relative aspect-video bg-base-950">
+            <img 
+              src={src} 
+              alt={alt || "Image"} 
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02] cursor-zoom-in"
+              onClick={() => onImageClick && onImageClick(src)}
+              onError={(e) => {
+                e.target.style.display = "none";
+                if (e.target.parentElement) {
+                  e.target.parentElement.style.display = "none";
+                }
+              }}
+            />
+          </div>
+        ),
+
         a: ({ node, ...props }) => (
-          <a 
-            className="text-accent-500 hover:text-accent-400 font-medium underline transition-colors cursor-pointer" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            {...props} 
+          <a
+            className="text-accent-500 hover:text-accent-400 font-medium underline transition-colors cursor-pointer"
+            target="_blank"
+            rel="noopener noreferrer"
+            {...props}
           />
         ),
         code: ({ node, className, children, ...props }) => {
           const isInline = !className;
           if (isInline) {
             return (
-              <code className="font-mono text-[0.85em] bg-white/[0.07] px-1.5 py-0.5 rounded text-accent-300" {...props}>
+              <code
+                className="font-mono text-[0.85em] bg-white/[0.07] px-1.5 py-0.5 rounded text-accent-300"
+                {...props}
+              >
                 {children}
               </code>
             );
           }
           return (
-            <code className="font-mono text-inherit bg-transparent p-0 block" {...props}>
+            <code
+              className="font-mono text-inherit bg-transparent p-0 block"
+              {...props}
+            >
               {children}
             </code>
           );
@@ -401,20 +457,39 @@ const Prose = ({ content }) => (
           const className = codeElement?.props?.className || "";
           const match = /language-(\w+)/.exec(className);
           const lang = match ? match[1] : "";
-          
+
           return (
-            <CodeBlock 
-              code={String(rawCode).replace(/\n$/, "")} 
-              language={lang} 
+            <CodeBlock
+              code={String(rawCode).replace(/\n$/, "")}
+              language={lang}
             />
           );
         },
-        ul: ({ node, ...props }) => <ul className="list-disc pl-6 space-y-1 my-2" {...props} />,
-        ol: ({ node, ...props }) => <ol className="list-decimal pl-6 space-y-1 my-2" {...props} />,
+        ul: ({ node, ...props }) => (
+          <ul className="list-disc pl-6 space-y-1 my-2" {...props} />
+        ),
+        ol: ({ node, ...props }) => (
+          <ol className="list-decimal pl-6 space-y-1 my-2" {...props} />
+        ),
         li: ({ node, ...props }) => <li className="pl-0.5" {...props} />,
-        h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-base-100 mt-4 mb-2" {...props} />,
-        h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-base-100 mt-3 mb-1.5" {...props} />,
-        h3: ({ node, ...props }) => <h3 className="text-md font-semibold text-base-100 mt-2 mb-1" {...props} />,
+        h1: ({ node, ...props }) => (
+          <h1
+            className="text-xl font-bold text-base-100 mt-4 mb-2"
+            {...props}
+          />
+        ),
+        h2: ({ node, ...props }) => (
+          <h2
+            className="text-lg font-bold text-base-100 mt-3 mb-1.5"
+            {...props}
+          />
+        ),
+        h3: ({ node, ...props }) => (
+          <h3
+            className="text-md font-semibold text-base-100 mt-2 mb-1"
+            {...props}
+          />
+        ),
         blockquote: ({ node, children, ...props }) => {
           let alertType = null;
           let cleanedChildren = children;
@@ -422,23 +497,27 @@ const Prose = ({ content }) => (
           try {
             const childrenArray = React.Children.toArray(children);
             const firstChild = childrenArray[0];
-            
+
             if (firstChild && firstChild.props && firstChild.props.children) {
-              const paragraphChildren = React.Children.toArray(firstChild.props.children);
+              const paragraphChildren = React.Children.toArray(
+                firstChild.props.children,
+              );
               const firstTextNode = paragraphChildren[0];
-              
+
               if (typeof firstTextNode === "string") {
-                const match = firstTextNode.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*)/i);
+                const match = firstTextNode.match(
+                  /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*)/i,
+                );
                 if (match) {
                   alertType = match[1].toUpperCase();
                   const remainingText = match[2];
-                  
+
                   cleanedChildren = [
                     React.cloneElement(firstChild, {
                       ...firstChild.props,
-                      children: [remainingText, ...paragraphChildren.slice(1)]
+                      children: [remainingText, ...paragraphChildren.slice(1)],
                     }),
-                    ...childrenArray.slice(1)
+                    ...childrenArray.slice(1),
                   ];
                 }
               }
@@ -451,14 +530,19 @@ const Prose = ({ content }) => (
             const styles = {
               NOTE: "bg-blue-900/10 border-blue-900/50 text-blue-200",
               TIP: "bg-emerald-900/10 border-emerald-900/50 text-emerald-200",
-              IMPORTANT: "bg-indigo-900/10 border-indigo-900/50 text-indigo-200",
+              IMPORTANT:
+                "bg-indigo-900/10 border-indigo-900/50 text-indigo-200",
               WARNING: "bg-amber-900/10 border-amber-900/50 text-amber-200",
-              CAUTION: "bg-rose-900/10 border-rose-900/50 text-rose-200"
+              CAUTION: "bg-rose-900/10 border-rose-900/50 text-rose-200",
             };
 
             return (
-              <div className={`p-4 border rounded-xl my-4 text-[14px] ${styles[alertType]}`}>
-                <div className="font-semibold text-xs mb-1 tracking-wider uppercase">{alertType}</div>
+              <div
+                className={`p-4 border rounded-xl my-4 text-[14px] ${styles[alertType]}`}
+              >
+                <div className="font-semibold text-xs mb-1 tracking-wider uppercase">
+                  {alertType}
+                </div>
                 <div className="leading-relaxed">{cleanedChildren}</div>
               </div>
             );
@@ -472,14 +556,30 @@ const Prose = ({ content }) => (
         },
         table: ({ node, ...props }) => (
           <div className="overflow-x-auto my-4 border border-white/[0.08] rounded-xl">
-            <table className="w-full text-left text-xs border-collapse" {...props} />
+            <table
+              className="w-full text-left text-xs border-collapse"
+              {...props}
+            />
           </div>
         ),
-        thead: ({ node, ...props }) => <thead className="bg-white/[0.02] border-b border-white/[0.08] text-base-300 font-semibold" {...props} />,
-        tbody: ({ node, ...props }) => <tbody className="divide-y divide-white/[0.05]" {...props} />,
-        tr: ({ node, ...props }) => <tr className="hover:bg-white/[0.01] transition-colors" {...props} />,
-        th: ({ node, ...props }) => <th className="px-4 py-2.5 font-medium" {...props} />,
-        td: ({ node, ...props }) => <td className="px-4 py-2.5 text-base-350" {...props} />,
+        thead: ({ node, ...props }) => (
+          <thead
+            className="bg-white/[0.02] border-b border-white/[0.08] text-base-300 font-semibold"
+            {...props}
+          />
+        ),
+        tbody: ({ node, ...props }) => (
+          <tbody className="divide-y divide-white/[0.05]" {...props} />
+        ),
+        tr: ({ node, ...props }) => (
+          <tr className="hover:bg-white/[0.01] transition-colors" {...props} />
+        ),
+        th: ({ node, ...props }) => (
+          <th className="px-4 py-2.5 font-medium" {...props} />
+        ),
+        td: ({ node, ...props }) => (
+          <td className="px-4 py-2.5 text-base-350" {...props} />
+        ),
       }}
     >
       {content}
@@ -491,6 +591,64 @@ const Prose = ({ content }) => (
 const MessageArea = ({ messages, loading, selectedConversationId }) => {
   const containerRef = useRef(null);
   const [activeLightboxImage, setActiveLightboxImage] = useState(null);
+
+  const handleOpenPdf = (pdfData) => {
+    try {
+      if (pdfData.startsWith("data:")) {
+        const arr = pdfData.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, "_blank");
+      } else {
+        window.open(pdfData, "_blank");
+      }
+    } catch (e) {
+      console.error("Failed to open PDF:", e);
+      window.open(pdfData, "_blank");
+    }
+  };
+
+  const handleDownloadPdfFile = (pdfData, docTitle) => {
+    try {
+      const filename = `${(docTitle || "document").toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}.pdf`;
+      if (pdfData.startsWith("data:")) {
+        const arr = pdfData.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const link = document.createElement("a");
+        link.href = pdfData;
+        link.download = filename;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (e) {
+      console.error("Failed to download PDF:", e);
+    }
+  };
 
   // scroll sync to bottom hook
   useEffect(() => {
@@ -535,7 +693,7 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-8 select-text"
     >
@@ -567,29 +725,91 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                 {thinking && (
                   <ThoughtBox content={thinking} active={isThinking} />
                 )}
+                {msg.pdf && (
+                  <div className="pb-3 w-full max-w-[600px]">
+                    <div className="relative group w-full rounded-2xl border border-white/[0.07] bg-base-850 overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex flex-col">
+                      <div className="flex items-center justify-between p-3 border-b border-white/[0.05] bg-base-900/60 backdrop-blur-md">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="p-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">
+                            <FileText size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-base-100 truncate">
+                              {msg.artifacts?.[0]?.title ||
+                                "Generated Document"}
+                            </p>
+                            <p className="text-[10px] text-base-400">
+                              Direct Document Preview
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenPdf(msg.pdf)}
+                            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-base-300 hover:text-white transition-colors cursor-pointer"
+                            title="Open in New Tab"
+                          >
+                            <ExternalLink size={14} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDownloadPdfFile(
+                                msg.pdf,
+                                msg.artifacts?.[0]?.title,
+                              )
+                            }
+                            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-base-300 hover:text-white transition-colors cursor-pointer"
+                            title="Download PDF"
+                          >
+                            <Download size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Embedded PDF iframe */}
+                      <div className="w-full aspect-[1/1.4] bg-white relative">
+                        <iframe
+                          src={
+                            msg.pdf.startsWith("data:")
+                              ? msg.pdf
+                              : `${msg.pdf}#toolbar=0&navpanes=0`
+                          }
+                          className="w-full h-full border-0 bg-white"
+                          title="PDF Preview"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {msg.images && msg.images.length > 0 && (
                   <div className="pb-3 w-full">
                     {msg.images.length === 1 ? (
                       // Single Image: Renders as a beautiful, premium visual card with full controls (ideal for AI Generated Images)
                       <div className="relative group max-w-[480px] w-full rounded-2xl overflow-hidden border border-white/[0.07] bg-base-850 hover:border-white/[0.18] transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
                         <div className="relative w-full overflow-hidden bg-base-900 aspect-[4/3] flex items-center justify-center">
-                          <img 
-                            src={msg.images[0]} 
-                            alt="AI Generated Output" 
+                          <img
+                            src={msg.images[0]}
+                            alt="AI Generated Output"
                             className="w-full h-full object-cover cursor-zoom-in transition-transform duration-500 group-hover:scale-[1.015]"
-                            onClick={() => setActiveLightboxImage(msg.images[0])}
+                            onClick={() =>
+                              setActiveLightboxImage(msg.images[0])
+                            }
                           />
                           {/* Image Actions Overlay on Hover */}
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
-                            <button 
-                              onClick={() => setActiveLightboxImage(msg.images[0])}
+                            <button
+                              onClick={() =>
+                                setActiveLightboxImage(msg.images[0])
+                              }
                               className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-200 shadow-lg border border-white/10 hover:scale-105 cursor-pointer"
                               title="Zoom Image"
                             >
                               <Maximize2 size={18} />
                             </button>
-                            <button 
-                              onClick={() => window.open(msg.images[0], "_blank")}
+                            <button
+                              onClick={() =>
+                                window.open(msg.images[0], "_blank")
+                              }
                               className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-200 shadow-lg border border-white/10 hover:scale-105 cursor-pointer"
                               title="Open Original"
                             >
@@ -599,9 +819,11 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                         </div>
                         {/* Bottom Info Bar */}
                         <div className="px-4 py-3 bg-base-800/60 border-t border-white/[0.05] flex items-center justify-between text-xs text-base-400">
-                          <span className="font-sans font-medium text-base-500">AI Generated Image</span>
-                          <a 
-                            href={msg.images[0]} 
+                          <span className="font-sans font-medium text-base-500">
+                            AI Generated Image
+                          </span>
+                          <a
+                            href={msg.images[0]}
                             download={`cortex-ai-${Date.now()}.png`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -616,19 +838,19 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                       // Multiple Images (Search Results): Renders as a clean grid
                       <div className="grid grid-cols-2 gap-3 max-w-[480px] w-full">
                         {msg.images.map((imgUrl, imgIdx) => (
-                          <div 
-                            key={imgIdx} 
+                          <div
+                            key={imgIdx}
                             className="relative group rounded-xl overflow-hidden border border-white/[0.07] bg-base-850 hover:border-white/[0.18] transition-all duration-300 shadow-md aspect-square"
                           >
-                            <img 
-                              src={imgUrl} 
-                              alt={`Search result ${imgIdx + 1}`} 
+                            <img
+                              src={imgUrl}
+                              alt={`Search result ${imgIdx + 1}`}
                               className="w-full h-full object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-103"
                               onClick={() => setActiveLightboxImage(imgUrl)}
                             />
                             {/* Hover Overlay */}
                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1.5">
-                              <button 
+                              <button
                                 onClick={() => setActiveLightboxImage(imgUrl)}
                                 className="p-1.5 rounded-lg bg-black/60 text-white backdrop-blur-sm transition-colors border border-white/10 cursor-pointer"
                               >
@@ -643,17 +865,25 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                 )}
                 {(() => {
                   if (!response) return null;
-                  
+
                   const cleanResponse = response.trim();
-                  const isCodeGeneration = cleanResponse.startsWith("code_generation") || 
-                                           cleanResponse.startsWith("{\"files\"") || 
-                                           cleanResponse.startsWith("```json\n{\"files\"") || 
-                                           cleanResponse.startsWith("```json\ncode_generation") ||
-                                           (msg.artifacts && msg.artifacts.length > 0 && msg.artifacts[0].files && msg.artifacts[0].files.length > 0);
+                  const isCodeGeneration =
+                    cleanResponse.startsWith("code_generation") ||
+                    cleanResponse.startsWith('{"files"') ||
+                    cleanResponse.startsWith('```json\n{"files"') ||
+                    cleanResponse.startsWith("```json\ncode_generation") ||
+                    (msg.artifacts &&
+                      msg.artifacts.length > 0 &&
+                      msg.artifacts[0].files &&
+                      msg.artifacts[0].files.length > 0);
 
                   if (isCodeGeneration) {
                     let filesList = [];
-                    if (msg.artifacts && msg.artifacts.length > 0 && msg.artifacts[0].files) {
+                    if (
+                      msg.artifacts &&
+                      msg.artifacts.length > 0 &&
+                      msg.artifacts[0].files
+                    ) {
                       filesList = msg.artifacts[0].files;
                     } else {
                       const filesData = tryParseJSON(response);
@@ -661,48 +891,51 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
                         filesList = filesData.files;
                       }
                     }
-                    
+
                     const inlineArtifact = {
                       id: msg._id || Date.now(),
                       title: "Generated Assets",
-                      files: filesList
+                      files: filesList,
                     };
 
-                    return <FileBuilderStatus rawText={response} artifact={inlineArtifact} />;
+                    return (
+                      <FileBuilderStatus
+                        rawText={response}
+                        artifact={inlineArtifact}
+                      />
+                    );
                   }
 
-                  return (
-                    <Prose content={response} />
-                  );
+                  return <Prose content={response} onImageClick={setActiveLightboxImage} />;
                 })()}
               </div>
             </div>
           );
         })}
-    </div>
+      </div>
 
-    {/* Fullscreen Image Lightbox Modal */}
-    {activeLightboxImage && (
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 cursor-zoom-out"
-        onClick={() => setActiveLightboxImage(null)}
-      >
-        <button 
-          className="absolute top-4 right-4 text-white hover:text-zinc-300 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+      {/* Fullscreen Image Lightbox Modal */}
+      {activeLightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 cursor-zoom-out"
           onClick={() => setActiveLightboxImage(null)}
         >
-          <X size={20} />
-        </button>
-        <img 
-          src={activeLightboxImage} 
-          alt="Fullscreen preview" 
-          className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl cursor-default border border-white/5"
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
-    )}
-  </div>
-);
+          <button
+            className="absolute top-4 right-4 text-white hover:text-zinc-300 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+            onClick={() => setActiveLightboxImage(null)}
+          >
+            <X size={20} />
+          </button>
+          <img
+            src={activeLightboxImage}
+            alt="Fullscreen preview"
+            className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl cursor-default border border-white/5"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default MessageArea;

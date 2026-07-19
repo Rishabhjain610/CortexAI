@@ -10,6 +10,8 @@ import { setArtifactOpen } from '../redux/conversationSlice.js';
 import SideBar from '../components/SideBar.jsx';
 import ChatArea from '../components/ChatArea.jsx';
 import Artifact from '../components/Artifact.jsx';
+import getCurrentUser from '../features/getCurrentUser.jsx';
+import UpgradeModal from '../components/UpgradeModal.jsx';
 
 const Home = () => {
   // login status check variables
@@ -18,6 +20,7 @@ const Home = () => {
   const dispatch = useDispatch();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
 
   // screen size change hone par drawer visibility toggle checks
   useEffect(() => {
@@ -81,6 +84,7 @@ const Home = () => {
             onLogout={handleLogout}
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
+            onOpenUpgrade={() => setIsUpgradeOpen(true)}
           />
 
           {/* main chat panel */}
@@ -89,12 +93,24 @@ const Home = () => {
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isArtifactOpen={isArtifactOpen}
             onToggleArtifact={() => dispatch(setArtifactOpen(!isArtifactOpen))}
+            onOpenUpgrade={() => setIsUpgradeOpen(true)}
           />
 
           {/* right side artifact panel */}
           <Artifact
             isOpen={isArtifactOpen}
             onClose={() => dispatch(setArtifactOpen(false))}
+          />
+
+          {/* Subscription Upgrade Modal */}
+          <UpgradeModal
+            isOpen={isUpgradeOpen}
+            onClose={() => setIsUpgradeOpen(false)}
+            user={user}
+            onSuccess={async () => {
+              const data = await getCurrentUser();
+              dispatch(setUserData(data));
+            }}
           />
         </div>
       ) : (

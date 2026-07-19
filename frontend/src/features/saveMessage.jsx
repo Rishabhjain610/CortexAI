@@ -1,7 +1,7 @@
 import api from "../utils/api";
 
 // Naya user message ya generated AI response database me persistent save karne ka call.
-const saveMessage = async (conversationId, content, role, images = [], artifacts = []) => {
+const saveMessage = async (conversationId, content, role, images = [], artifacts = [], pdf = "") => {
   try {
     const response = await api.post("/api/chat/save-message", {
       conversationId,
@@ -9,6 +9,7 @@ const saveMessage = async (conversationId, content, role, images = [], artifacts
       role: role || "user",
       images,
       artifacts,
+      pdf,
     });
     return response.data?.data;
   } catch (error) {

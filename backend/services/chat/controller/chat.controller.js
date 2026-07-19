@@ -49,13 +49,14 @@ export const getConversations = async (req, res) => {
 // AI ya user ka naya message MongoDB aur Redis cache dono me update karne ka controller.
 export const saveMessage = async (req, res) => {
   try {
-    const { conversationId, content, role, images, artifacts } = req.body;
+    const { conversationId, content, role, images, artifacts, pdf } = req.body;
     const savedMessage = await messageModel.create({
       conversation: conversationId,
       content,
       role: role || "user",
       images: images || [],
       artifacts: artifacts || [],
+      pdf: pdf || "",
     });
 
     // Active conversation ka cache agar Redis mein pehle se bana hua hai,

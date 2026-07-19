@@ -15,6 +15,7 @@ const ChatArea = ({
   onToggleSidebar,
   isArtifactOpen,
   onToggleArtifact,
+  onOpenUpgrade,
 }) => {
   // Redux se active chat/convo ID nikalne ke liye
   const selectedConversationId = useSelector(
@@ -112,30 +113,55 @@ const ChatArea = ({
     let accumulatedText = "";
     let accumulatedImages = [];
     let accumulatedArtifacts = [];
+    let accumulatedPdf = "";
 
     // 3. agent service se real-time chunks pull karna
-    await sendMessage(convoId, text, options, (chunk) => {
-      if (chunk.text) {
-        accumulatedText += chunk.text;
-      }
-      if (chunk.images) {
-        accumulatedImages = [...new Set([...accumulatedImages, ...chunk.images])];
-      }
-      if (chunk.artifacts) {
-        accumulatedArtifacts = [...accumulatedArtifacts, ...chunk.artifacts];
-      }
+    try {
+      await sendMessage(convoId, text, options, (chunk) => {
+        if (chunk.text) {
+          accumulatedText += chunk.text;
+        }
+        if (chunk.images) {
+          accumulatedImages = [...new Set([...accumulatedImages, ...chunk.images])];
+        }
+        if (chunk.artifacts) {
+          accumulatedArtifacts = [...accumulatedArtifacts, ...chunk.artifacts];
+        }
+        if (chunk.pdf) {
+          accumulatedPdf = chunk.pdf;
+        }
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === tempAiMsgId 
+              ? { ...msg, content: accumulatedText, images: accumulatedImages, artifacts: accumulatedArtifacts, pdf: accumulatedPdf } 
+              : msg
+          )
+        );
+      });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      const is403 = err.message && err.message.includes("403");
+      const errorMsg = is403
+        ? "⚠️ Insufficient credits. Please upgrade your subscription to continue."
+        : "⚠️ Failed to get response from AI assistant. Please try again.";
+        
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id === tempAiMsgId 
-            ? { ...msg, content: accumulatedText, images: accumulatedImages, artifacts: accumulatedArtifacts } 
+            ? { ...msg, content: errorMsg } 
             : msg
         )
       );
-    });
+      
+      if (is403 && onOpenUpgrade) {
+        onOpenUpgrade();
+      }
+      return;
+    }
 
-    if (accumulatedText) {
+    if (accumulatedText || accumulatedPdf) {
       // 4. complete message generate hone par use database me save karenge
-      await saveMessage(convoId, accumulatedText, "assistant", accumulatedImages, accumulatedArtifacts);
+      await saveMessage(convoId, accumulatedText, "assistant", accumulatedImages, accumulatedArtifacts, accumulatedPdf);
     }
 
     // code/artifact banne par right drawer auto open

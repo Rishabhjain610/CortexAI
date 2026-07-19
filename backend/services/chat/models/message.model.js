@@ -35,6 +35,10 @@ const messageSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    pdf: {
+      type: String,
+      default: "",
+    },
     artifacts: {
       type:[artifactSchema],
       default: [],

@@ -1,6 +1,4 @@
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { getModel } from "../config/model.js";
-
+// Router node function: Keyword heuristics se sahi agent ko route karta hai. No LLM calls.
 // Router node function: User request ko dynamic classification (Keyword heuristics and LLM model) ke zariye sahi agent ko redirect karta hai.
 export const router = async (state) => {
   console.log("--- ROUTER NODE ---");
@@ -14,6 +12,13 @@ export const router = async (state) => {
 
   const cleanPrompt = (prompt || "").trim().toLowerCase();
 
+  // Word-boundary matching helper to prevent substring collisions (e.g. "rate" inside "generate")
+  const matchKeyword = (keyword) => {
+    const escaped = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}s?\\b`, 'i');
+    return regex.test(cleanPrompt);
+  };
+
   // 2. Deterministic Keyword Heuristics
   // Web Search keywords heuristics.
   const searchKeywords = [
@@ -21,94 +26,93 @@ export const router = async (state) => {
     "price", "rate", "cost", "how much", "buy", "shop", "stock", "shares", 
     "live", "today", "yesterday", "forecast", "who is", "who was", "biography",
     "bio of", "born in", "born on", "spouse", "career of", "gather info", 
-    "gather information", "research", "lookup", "look up", "info", "details", 
-    "find out", "find details"
+    "gather information", "research", "lookup", "look up", "info", "information", "details", 
+    "find out", "find details", "current", "latest", "recent", "about"
   ];
-  if (searchKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+  if (searchKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: searchAgent`);
     return { agent: "searchAgent" };
   }
 
   // Code coding keywords heuristics.
   const codingKeywords = [
-    "code", "program", "python", "javascript", "react", "html", "css", "java", 
+    "code", "coding", "program", "programming", "python", "javascript", "react", "html", "css", "java", 
     "c++", "c#", "ruby", "rust", "function", "compile", "debug", "error", "api", 
-    "database", "sql", "website", "webpage", "web page", "app", "application",
+    "database", "sql", "website", "webpage", "web page", "app", "apps", "application", "applications",
     "ui", "interface", "template", "page"
   ];
-  if (codingKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+  if (codingKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: codingAgent`);
     return { agent: "codingAgent" };
   }
 
   // Document/PDF keywords heuristics.
-  const pdfKeywords = ["pdf", "document", "file", "invoice", "resume", "cv", "paper"];
-  if (pdfKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+  const topicIndicators = ["on", "about", "compare", "how to", "history", "explain", "topic", "information", "details"];
+  
+  const pdfKeywords = ["pdf", "pdfs", "document", "documents", "file", "files", "invoice", "resume", "cv", "paper"];
+  if (pdfKeywords.some(matchKeyword)) {
+    if (topicIndicators.some(matchKeyword)) {
+      console.log(`Routed by Keyword Heuristic (topic-pdf) to: searchAgent`);
+      return { agent: "searchAgent" };
+    }
     console.log(`Routed by Keyword Heuristic to: pdfAgent`);
     return { agent: "pdfAgent" };
   }
 
   // Slide Deck keywords heuristics.
-  const pptKeywords = ["ppt", "presentation", "slide", "powerpoint", "deck", "slideshow"];
-  if (pptKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+  const pptKeywords = ["ppt", "pptx", "presentation", "presentations", "presntation", "presenation", "presentaton", "slide", "slides", "powerpoint", "deck", "slideshow"];
+  if (pptKeywords.some(matchKeyword)) {
+    if (topicIndicators.some(matchKeyword)) {
+      console.log(`Routed by Keyword Heuristic (topic-ppt) to: searchAgent`);
+      return { agent: "searchAgent" };
+    }
     console.log(`Routed by Keyword Heuristic to: pptAgent`);
     return { agent: "pptAgent" };
   }
 
   // Graphic / Image creation keywords heuristics.
-  const imageKeywords = ["draw", "paint", "generate image", "create photo", "picture of", "illustration", "sketch"];
-  if (imageKeywords.some(keyword => cleanPrompt.includes(keyword))) {
+  const imageKeywords = [
+    "draw", "paint", "sketch", "illustration",
+    "generate image", "generate a image", "generate an image",
+    "create image", "create a image", "create an image",
+    "make image", "make a image", "make an image",
+    "create photo", "create a photo", "generate photo", "generate a photo",
+    "picture of", "image of", "photo of",
+    "render image", "design image"
+  ];
+  if (imageKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: imageAgent`);
     return { agent: "imageAgent" };
   }
 
-  // 3. Fallback: Agar kisi keyword se match na ho, toh dynamic LLM prediction use karte hain.
+  // 3. LLM Fallback — Minimax (Ollama, local) se classify karo. No rate limits.
   try {
-    const llm = getModel("chatAgent");
-    const systemPrompt = `You are the routing manager of CortexAI.
-Analyze the user's prompt and classify which specialized agent should handle it.
+    const { getModel } = await import("../config/model.js");
+    const llm = getModel("chatAgent"); // Minimax Ollama — local, no API rate limits
+    const systemPrompt = `You are a routing agent for CortexAI. Classify the user's prompt into one of these agents:
+- chatAgent: General conversation, greetings, jokes, opinions, chit-chat
+- searchAgent: Questions needing live web info, current events, who/what/where queries, facts about people/places
+- codingAgent: Writing, debugging, or explaining code and programming
+- imageAgent: Generating, drawing, or creating images/photos/art
+- pdfAgent: Creating or working with PDF documents, resumes, reports
+- pptAgent: Creating presentations or slide decks
 
-The available agents are:
-- "codingAgent": For writing, explaining, or debugging code, software, and programming tasks.
-- "imageAgent": For generating, drawing, or editing images.
-- "pdfAgent": For reading, analyzing, or summarizing PDF/document files.
-- "pptAgent": For creating or designing presentation slide decks.
-- "searchAgent": For queries needing live web search, search engines, current events, or Google search.
-- "chatAgent": For general conversation, greetings (like "hi", "hello"), chit-chat, or when no other agent fits.
+Reply with ONLY the agent name (e.g. chatAgent). No explanation.`;
 
-Here are examples of how to route:
-- Prompt: "how do I write a loop in javascript?" -> codingAgent
-- Prompt: "create a picture of a cat in space" -> imageAgent
-- Prompt: "summarize this uploaded pdf document" -> pdfAgent
-- Prompt: "make a presentation about artificial intelligence slides" -> pptAgent
-- Prompt: "what is the current stock price of Tesla?" -> searchAgent
-- Prompt: "who is the CEO of Google?" -> searchAgent
-- Prompt: "tell me about Sundar Pichai biography" -> searchAgent
-- Prompt: "tell me about the latest news in India" -> searchAgent
-- Prompt: "hi there, what is your name?" -> chatAgent
-- Prompt: "tell me a joke" -> chatAgent
-
-Respond with ONLY the name of the agent in lowercase (one of: codingAgent, imageAgent, pdfAgent, pptAgent, searchAgent, chatAgent). Do not include any explanation or punctuation.`;
-
-    const messages = [
+    const { HumanMessage, SystemMessage } = await import("@langchain/core/messages");
+    const response = await llm.invoke([
       new SystemMessage(systemPrompt),
       new HumanMessage(prompt || ""),
-    ];
+    ]);
 
-    const response = await llm.invoke(messages);
-    const classification = response.content.trim().replace(/['"`]/g, ""); // Double quotes/quotes filter out kiya
-    
+    const classification = (response.content || "").trim().replace(/['\"`\n]/g, "");
     const validAgents = ["chatAgent", "codingAgent", "imageAgent", "pdfAgent", "pptAgent", "searchAgent"];
-    let targetAgent = "chatAgent";
-    
-    if (validAgents.includes(classification)) {
-      targetAgent = classification;
-    }
+    const targetAgent = validAgents.includes(classification) ? classification : "chatAgent";
 
-    console.log(`Routed by Smarter Router to: ${targetAgent} (classified from: "${classification}")`);
+    console.log(`Routed by Minimax LLM to: ${targetAgent}`);
     return { agent: targetAgent };
-  } catch (error) {
-    console.error("Error in smarter router classification, defaulting to chatAgent:", error);
+  } catch (err) {
+    console.error("LLM router fallback failed, defaulting to chatAgent:", err.message);
     return { agent: "chatAgent" };
   }
 };

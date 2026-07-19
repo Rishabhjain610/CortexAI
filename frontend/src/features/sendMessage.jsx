@@ -44,7 +44,7 @@ const sendMessage = async (conversationId, prompt, options = {}, onChunk) => {
           try {
             const parsed = JSON.parse(dataStr);
             // Agar parsed object me naya text, image, ya artifact hai toh callback function trigger karte hain.
-            if (parsed.text || parsed.images || parsed.artifacts) {
+            if (parsed.text || parsed.images || parsed.artifacts || parsed.pdf) {
               onChunk(parsed);
             }
           } catch (e) {
@@ -55,7 +55,7 @@ const sendMessage = async (conversationId, prompt, options = {}, onChunk) => {
     }
   } catch (error) {
     console.error("Stream reading error:", error);
-    return null;
+    throw error;
   }
 };
 

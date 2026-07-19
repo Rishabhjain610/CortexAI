@@ -21,8 +21,20 @@ const userSchema=new mongoose.Schema({
     },
     plan:{
         type:String,
-        enum:["free","pro","enterprise"],
+        enum:["free","pro","business"],
         default:"free"
+    },
+    credits:{
+        type:Number,
+        default:100
+    },
+    totalCredits:{
+        type:Number,
+        default:100
+    },
+    planexpiredAt:{
+        type:Date,
+        required:false
     }
     
 },{
