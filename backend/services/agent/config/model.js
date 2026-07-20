@@ -5,29 +5,35 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Groq Qwen model — chat, search, intent classification ke liye (thinking model)
+// Groq Qwen — chat, search, intent classification (thinking model)
 export const groq = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
   model: "qwen/qwen3.6-27b",
 });
 
-// Groq LLaMA model — structured JSON output tasks ke liye (NON-thinking model, no <think> tokens)
-// PDF/PPT agents ko yahi use karna chahiye taaki JSON parsing clean rahe
+// Groq LLaMA — structured JSON output (PDF/PPT agents, non-thinking, clean JSON)
 export const groqStructured = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3.3-70b-versatile", // Fast, non-reasoning model — JSON output reliable rehta hai
+  model: "llama-3.3-70b-versatile",
   temperature: 0,
 });
 
-// Ollama config: local model running and testing ke liye client.
+// Groq Qwen Vision — image analysis (multimodal: VQA, OCR, up to 5 images per request)
+export const groqVision = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY,
+  model: "qwen/qwen3.6-27b",
+  temperature: 0.2,
+});
+
+// Ollama — local minimax model (chat agent only)
 export const ollama = new ChatOllama({
   model: "minimax-m3:cloud",
   baseUrl: "http://localhost:11434",
-  numPredict: 4096, // Response truncation ko prevent karne ke liye generation limit badhai
-  numCtx: 16384, // Context overflow ko prevent karne ke liye window size badhai
+  numPredict: 4096,
+  numCtx: 16384,
 });
 
-// OpenRouter model configurations - deepseek only (no fallback backup models)
+// OpenRouter — DeepSeek (coding agent only)
 export const deepseek = new ChatOpenRouter({
   model: "deepseek/deepseek-chat",
   temperature: 0,
@@ -35,22 +41,26 @@ export const deepseek = new ChatOpenRouter({
   openrouterApiKey: process.env.OPENROUTER_API_KEY,
 });
 
-// Agent roles mapping function: Sahi agent ko sahi model dispatch karne ke liye router.
+// Agent routing
 export const getModel = (agent) => {
   switch (agent) {
     case "chatAgent":
-      return ollama; // Chat Agent ke liye local Ollama Minimax — no rate limits
+      return ollama; // Chat — Ollama Minimax (local)
     case "codingAgent":
-      return deepseek; // Code generation ke liye deepseek return karte hain.
+      return deepseek; // Code — OpenRouter DeepSeek
     case "pdfAgent":
-      return ollama; // PDF ke liye Ollama Minimax model use kar rahe hain.
+      return groqStructured; // PDF generation — Groq LLaMA (structured JSON)
     case "pptAgent":
-      return ollama; // PPT ke liye Ollama Minimax model use kar rahe hain.
+      return groqStructured; // PPT generation — Groq LLaMA (structured JSON)
     case "searchAgent":
-      return groq; // Search classification ke liye Groq Qwen.
+      return groq; // Search classification — Groq Qwen
     case "imageAgent":
-      return groq; // Image prompt ke liye Groq Qwen.
+      return groq; // Image prompt generation — Groq Qwen
+    case "imageAnalyzer":
+      return groqVision; // Vision analysis — Groq Qwen Vision
+    case "pdfRagAgent":
+      return ollama; // PDF RAG — Ollama Minimax
     default:
-      return groq; // Kuchh select na hone par Groq default fallback hai.
+      return groq;
   }
 };

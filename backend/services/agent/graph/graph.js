@@ -7,7 +7,8 @@ import { pdfAgent } from "../agents/pdf.agents.js";
 import { searchAgent } from "../agents/search.agents.js";
 import { pptAgent } from "../agents/ppt.agents.js";
 import { codingAgent } from "../agents/coding.agents.js";
-
+import { pdfRagAgent } from "../agents/pdfRag.agent.js";
+import { imageAnalyzer } from "../agents/imageAnalyzer.agent.js";
 // LangGraph ka StateGraph instance initiate kar rahe hain jisme saare states manage honge
 const workflow = new StateGraph(AgentState);
 
@@ -19,6 +20,8 @@ workflow.addNode("pdfAgent", pdfAgent);
 workflow.addNode("searchAgent", searchAgent);
 workflow.addNode("pptAgent", pptAgent);
 workflow.addNode("codingAgent", codingAgent);
+workflow.addNode("pdfRagAgent", pdfRagAgent);
+workflow.addNode("imageAnalyzer", imageAnalyzer);
 
 // 2. Entry point set kiya - request sabse pehle router node par jayegi
 workflow.addEdge("__start__", "router");
@@ -34,6 +37,8 @@ workflow.addConditionalEdges(
     searchAgent: "searchAgent",
     pptAgent: "pptAgent",
     codingAgent: "codingAgent",
+    pdfRagAgent:"pdfRagAgent",
+    imageAnalyzer:"imageAnalyzer"
   }
 );
 
@@ -121,7 +126,8 @@ workflow.addEdge("imageAgent", "__end__");
 workflow.addEdge("pdfAgent", "__end__");
 workflow.addEdge("pptAgent", "__end__");
 workflow.addEdge("codingAgent", "__end__");
-
+workflow.addEdge("pdfRagAgent", "__end__");
+workflow.addEdge("imageAnalyzer", "__end__");
 // 5. Poore graph configuration flow ko compile karke default export set kiya
 const app = workflow.compile();
 

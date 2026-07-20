@@ -188,6 +188,36 @@ Formatting Rules:
       return c;
     };
 
+    const extractCodeFilesFallback = (rawText) => {
+      const files = [];
+      // Match "name": "...", "code": "..." patterns
+      const fileEntryRegex = /"(?:name|path|filename)"\s*:\s*"([^"]+)"\s*,\s*"(?:code|content)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      let match;
+      while ((match = fileEntryRegex.exec(rawText)) !== null) {
+        try {
+          const name = match[1];
+          const code = JSON.parse(`"${match[2]}"`);
+          files.push({ name, code });
+        } catch {
+          // ignore single entry parse error
+        }
+      }
+
+      // If pattern matching found nothing, extract markdown codeblocks
+      if (files.length === 0) {
+        const codeBlockRegex = /```(?:[a-zA-Z0-9_-]+)?(?:\s+(?:filename|file|path)=["']?([^"'\n\s]+)["']?)?\n([\s\S]*?)```/g;
+        let blockMatch;
+        let index = 1;
+        while ((blockMatch = codeBlockRegex.exec(rawText)) !== null) {
+          const fileName = blockMatch[1] || (index === 1 ? "App.jsx" : `Component${index}.jsx`);
+          index++;
+          const code = blockMatch[2];
+          files.push({ name: fileName, code });
+        }
+      }
+      return files;
+    };
+
     let parsedData = null;
     try {
       parsedData = JSON.parse(cleanedContent);
@@ -199,12 +229,15 @@ Formatting Rules:
           parsedData = JSON.parse(repairJson(closeUnterminatedJson(cleanedContent)));
         } catch (err) {
           console.error("Could not parse generated code JSON content:", err.message);
+          filesList = extractCodeFilesFallback(cleanedContent);
         }
       }
     }
 
     if (parsedData && Array.isArray(parsedData.files)) {
       filesList = parsedData.files;
+    } else if (filesList.length === 0) {
+      filesList = extractCodeFilesFallback(cleanedContent);
     }
   }
 

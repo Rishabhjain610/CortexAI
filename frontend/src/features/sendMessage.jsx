@@ -1,13 +1,27 @@
 // Agent backend API se live AI response streams consume karne wala helper.
 const sendMessage = async (conversationId, prompt, options = {}, onChunk) => {
   try {
+    // File present hone par FormData (multipart), warna JSON
+    const { file, ...restOptions } = options;
+    let body, headers;
+    if (file) {
+      const fd = new FormData();
+      fd.append("conversationId", conversationId);
+      fd.append("prompt", prompt || "");
+      fd.append("file", file);
+      Object.entries(restOptions).forEach(([k, v]) => v != null && fd.append(k, v));
+      body = fd;
+      headers = {}; // browser sets Content-Type with boundary automatically
+    } else {
+      body = JSON.stringify({ conversationId, prompt, ...restOptions });
+      headers = { "Content-Type": "application/json" };
+    }
+
     const response = await fetch("http://localhost:8000/api/agent/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Sessions authentication cookies include kar rahe hain.
-      body: JSON.stringify({ conversationId, prompt, ...options }),
+      headers,
+      credentials: "include",
+      body,
     });
 
     if (response.status !== 200) {

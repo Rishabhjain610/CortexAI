@@ -9,5 +9,6 @@ export const AgentState=Annotation.Root({
     conversationId:Annotation(), // unique chat id reference
     history:Annotation(), // previous conversations logs
     model:Annotation(), // active model selection name
-    images:Annotation() // search results images urls
+    images:Annotation(), // search results images urls
+    file:Annotation()
 })

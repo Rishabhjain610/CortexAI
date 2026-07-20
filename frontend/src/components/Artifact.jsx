@@ -17,20 +17,23 @@ const getMonacoLanguage = (fileName) => {
   return "plaintext";
 };
 
+const getFileText = (f) => (f ? (f.code ?? f.content ?? "") : "");
+
 // html, css, aur js ko combine karke single page html source code ready karne ka logic
 const compileSrcDocDirect = (filesList) => {
   if (!filesList || filesList.length === 0) return "";
-  const htmlFile = filesList.find(f => f.name.endsWith(".html")) || filesList[0];
-  let htmlContent = htmlFile ? htmlFile.content : "";
+  const htmlFile = filesList.find(f => f.name && f.name.endsWith(".html")) || filesList[0];
+  let htmlContent = getFileText(htmlFile);
   
-  if (!htmlFile || !htmlFile.name.endsWith(".html")) {
-    return `<html><body><pre>${htmlContent}</pre></body></html>`;
+  if (!htmlFile || !htmlFile.name || !htmlFile.name.endsWith(".html")) {
+    const safeContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return `<!DOCTYPE html><html><body style="background:#09090b;color:#e4e4e7;font-family:monospace;padding:16px;"><pre style="white-space:pre-wrap;">${safeContent}</pre></body></html>`;
   }
   
-  const cssFile = filesList.find(f => f.name.endsWith(".css"));
-  const cssContent = cssFile ? cssFile.content : "";
-  const jsFile = filesList.find(f => f.name.endsWith(".js"));
-  const jsContent = jsFile ? jsFile.content : "";
+  const cssFile = filesList.find(f => f.name && f.name.endsWith(".css"));
+  const cssContent = getFileText(cssFile);
+  const jsFile = filesList.find(f => f.name && f.name.endsWith(".js"));
+  const jsContent = getFileText(jsFile);
   
   const styleTag = cssContent ? `<style>${cssContent}</style>` : "";
   if (htmlContent.includes("</head>")) {
@@ -63,8 +66,9 @@ const Artifact = ({ isOpen, onClose }) => {
   const lastLoadedArtifactIdRef = useRef(null);
 
   const { title, files } = selectedArtifact || {};
-  const currentFile = files?.[activeFileIdx] || files?.[0] || { name: "No File", content: "" };
-  const hasHtml = files?.some(f => f.name.endsWith(".html"));
+  const currentFile = files?.[activeFileIdx] || files?.[0] || { name: "No File", content: "", code: "" };
+  const currentFileText = getFileText(currentFile);
+  const hasHtml = files?.some(f => f.name && f.name.endsWith(".html"));
 
   const compileSrcDoc = () => compileSrcDocDirect(files);
 
@@ -77,7 +81,7 @@ const Artifact = ({ isOpen, onClose }) => {
         
         if (selectedArtifact.files?.length > 0) {
           setActiveFileIdx(0);
-          const hasHtml = selectedArtifact.files.some(f => f.name.endsWith(".html"));
+          const hasHtml = selectedArtifact.files.some(f => f.name && f.name.endsWith(".html"));
           const initialTab = hasHtml ? "preview" : "code";
           setActiveTab(initialTab);
           
@@ -102,7 +106,7 @@ const Artifact = ({ isOpen, onClose }) => {
   // current active file ka content clipboard me copy karne ke liye
   const handleCopy = () => {
     if (!currentFile) return;
-    navigator.clipboard.writeText(currentFile.content);
+    navigator.clipboard.writeText(currentFileText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -112,9 +116,9 @@ const Artifact = ({ isOpen, onClose }) => {
     if (!files || files.length === 0) return;
     files.forEach((file) => {
       const element = document.createElement("a");
-      const blob = new Blob([file.content], { type: "text/plain" });
+      const blob = new Blob([getFileText(file)], { type: "text/plain" });
       element.href = URL.createObjectURL(blob);
-      element.download = file.name;
+      element.download = file.name || "file.txt";
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
@@ -124,163 +128,183 @@ const Artifact = ({ isOpen, onClose }) => {
   // fallback agar koi active artifact selected nahi hai layout me
   if (!selectedArtifact) {
     return (
-      <div
-        className={`fixed inset-y-0 right-0 z-40 lg:relative h-screen bg-[#1c1c1e] flex flex-col text-zinc-300 select-none flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
-          isOpen
-            ? "w-full sm:w-96 xl:w-[480px] translate-x-0 border-l border-zinc-800/80 opacity-100"
-            : "w-0 translate-x-full opacity-0 pointer-events-none border-l-0"
-        }`}
-      >
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-zinc-500 font-sans">
-          <FileText size={48} strokeWidth={1.5} className="mb-3 text-zinc-700 animate-pulse" />
-          <p className="text-xs">No active artifact selected.</p>
+      <>
+        {isOpen && (
+          <div
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300"
+          />
+        )}
+        <div
+          className={`fixed inset-y-0 right-0 z-40 lg:relative h-screen bg-[#1c1c1e] flex flex-col text-zinc-300 select-none flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+            isOpen
+              ? "w-full sm:w-[440px] md:w-[480px] lg:w-[500px] xl:w-[560px] translate-x-0 border-l border-zinc-800/80 opacity-100 shadow-2xl"
+              : "w-0 translate-x-full opacity-0 pointer-events-none border-l-0"
+          }`}
+        >
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-zinc-500 font-sans">
+            <FileText size={48} strokeWidth={1.5} className="mb-3 text-zinc-700 animate-pulse" />
+            <p className="text-xs font-medium">No active artifact selected.</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div
-      className={`fixed inset-y-0 right-0 z-40 lg:relative h-screen bg-[#1c1c1e] flex flex-col text-zinc-300 select-none flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
-        isOpen
-          ? "w-full sm:w-96 xl:w-[480px] translate-x-0 border-l border-zinc-800/80 opacity-100"
-          : "w-0 translate-x-full opacity-0 pointer-events-none border-l-0"
-      }`}
-    >
-      <div className="w-full sm:w-96 xl:w-[480px] flex flex-col h-full flex-shrink-0">
-        {/* Top header aur meta information header */}
-        <div className="h-14 border-b border-zinc-800/80 bg-zinc-900/40 px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1 bg-indigo-900/30 border border-indigo-850 rounded text-indigo-400">
-              <FileText size={15} />
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300"
+        />
+      )}
+      <div
+        className={`fixed inset-y-0 right-0 z-40 lg:relative h-screen bg-[#1c1c1e] flex flex-col text-zinc-300 select-none flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+          isOpen
+            ? "w-full sm:w-[440px] md:w-[480px] lg:w-[500px] xl:w-[560px] translate-x-0 border-l border-zinc-800/80 opacity-100 shadow-2xl"
+            : "w-0 translate-x-full opacity-0 pointer-events-none border-l-0"
+        }`}
+      >
+        <div className="w-full flex flex-col h-full flex-shrink-0 min-w-0">
+          {/* Top header aur meta information header */}
+          <div className="h-14 border-b border-zinc-800/80 bg-zinc-900/40 px-4 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 bg-indigo-900/30 border border-indigo-850/50 rounded-lg text-indigo-400 shrink-0">
+                <FileText size={16} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-xs font-semibold text-white truncate max-w-[180px] sm:max-w-[260px]">
+                  {title || currentFile.name}
+                </h3>
+                <p className="text-[10px] text-zinc-500 font-sans">Artifact • Updated just now</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xs font-semibold text-white truncate max-w-[200px]">{title || currentFile.name}</h3>
-              <p className="text-[10px] text-zinc-500">Artifact • Updated just now</p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition duration-200 cursor-pointer shrink-0"
+              title="Close drawer"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-zinc-850 rounded-lg text-zinc-400 hover:text-white transition duration-200 cursor-pointer"
-          >
-            <X size={15} />
-          </button>
-        </div>
 
-        {/* Preview aur Code tabs select karne ke buttons */}
-        <div className="px-4 py-2 border-b border-zinc-800/50 bg-zinc-900/20 flex items-center justify-between">
-          <div className="flex gap-2">
-            {hasHtml && (
+          {/* Preview aur Code tabs select karne ke buttons */}
+          <div className="px-3 sm:px-4 py-2 border-b border-zinc-800/50 bg-zinc-900/20 flex items-center justify-between shrink-0">
+            <div className="flex gap-1.5 sm:gap-2">
+              {hasHtml && (
+                <button
+                  onClick={() => handleTabChange("preview")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                    activeTab === "preview"
+                      ? "bg-zinc-800 text-white shadow-sm"
+                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850/40"
+                  }`}
+                >
+                  <Eye size={13} />
+                  <span>Preview</span>
+                </button>
+              )}
               <button
-                onClick={() => handleTabChange("preview")}
+                onClick={() => handleTabChange("code")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                  activeTab === "preview"
-                    ? "bg-zinc-800 text-white"
+                  activeTab === "code" || !hasHtml
+                    ? "bg-zinc-800 text-white shadow-sm"
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850/40"
                 }`}
               >
-                <Eye size={13} />
-                <span>Preview</span>
+                <Code size={13} />
+                <span>Code</span>
               </button>
+            </div>
+          </div>
+
+          {/* Files list ke tabs dikhane ke liye */}
+          {activeTab === "code" && files && files.length > 0 && (
+            <div className="flex border-b border-zinc-800/80 bg-zinc-900/40 overflow-x-auto shrink-0 select-none scrollbar-thin">
+              {files.map((file, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setActiveFileIdx(idx);
+                    setCopied(false);
+                  }}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 border-r border-zinc-800 text-xs font-mono transition cursor-pointer relative shrink-0
+                    ${
+                      activeFileIdx === idx
+                        ? "bg-zinc-950 text-white font-medium border-t-2 border-t-indigo-500"
+                        : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                    }`}
+                >
+                  <FileText size={12} className={activeFileIdx === idx ? "text-indigo-400" : "text-zinc-500"} />
+                  <span className="truncate max-w-[140px]">{file.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Beech ka block - ya toh Iframe preview dikhega ya Monaco editor */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 bg-zinc-950 flex flex-col min-h-0">
+            {activeTab === "preview" && hasHtml ? (
+              <div className="w-full h-full bg-white rounded-lg overflow-hidden border border-zinc-800 shadow-lg">
+                <iframe
+                  title="Artifact Preview"
+                  srcDoc={previewSrcDoc}
+                  className="w-full h-full border-none"
+                  sandbox="allow-scripts"
+                />
+              </div>
+            ) : (
+              <div className="flex-1 w-full h-full rounded-lg overflow-hidden border border-zinc-800/80 min-h-[300px]">
+                <Editor
+                  height="100%"
+                  language={getMonacoLanguage(currentFile.name)}
+                  theme="vs-dark"
+                  value={currentFileText}
+                  onChange={(val) => {
+                    dispatch(updateArtifactFileContent({ fileIdx: activeFileIdx, content: val || "" }));
+                  }}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 12,
+                    lineNumbers: "on",
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    padding: { top: 10, bottom: 10 },
+                    fontFamily: "Fira Code, Monaco, Courier New, monospace",
+                    cursorBlinking: "smooth",
+                    cursorSmoothCaretAnimation: "on",
+                    scrollbar: {
+                      vertical: "visible",
+                      horizontal: "visible",
+                    },
+                  }}
+                />
+              </div>
             )}
+          </div>
+
+          {/* Bottom ke actions (Copy aur Download buttons) */}
+          <div className="p-2.5 sm:p-3 border-t border-zinc-800/80 bg-zinc-900/40 flex items-center justify-end gap-2 shrink-0">
             <button
-              onClick={() => handleTabChange("code")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                activeTab === "code" || !hasHtml
-                  ? "bg-zinc-800 text-white"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850/40"
-              }`}
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer"
             >
-              <Code size={13} />
-              <span>Code</span>
+              {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              <span>{copied ? "Copied!" : "Copy Code"}</span>
+            </button>
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium text-white transition cursor-pointer shadow-md shadow-indigo-600/10"
+            >
+              <Download size={13} />
+              <span>Download</span>
             </button>
           </div>
         </div>
-
-        {/* Files list ke tabs dikhane ke liye */}
-        {activeTab === "code" && files && files.length > 0 && (
-          <div className="flex border-b border-zinc-800/80 bg-zinc-900/40 overflow-x-auto shrink-0 select-none">
-            {files.map((file, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setActiveFileIdx(idx);
-                  setCopied(false);
-                }}
-                className={`flex items-center gap-1.5 px-4 py-2 border-r border-zinc-800 text-xs font-mono transition cursor-pointer relative
-                  ${
-                    activeFileIdx === idx
-                      ? "bg-zinc-950 text-white font-medium border-t border-t-indigo-500"
-                      : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
-                  }`}
-              >
-                <FileText size={12} className={activeFileIdx === idx ? "text-indigo-400" : "text-zinc-500"} />
-                <span>{file.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Beech ka block - ya toh Iframe preview dikhega ya Monaco editor */}
-        <div className="flex-1 overflow-y-auto p-4 bg-zinc-950 flex flex-col min-h-0">
-          {activeTab === "preview" && hasHtml ? (
-            <div className="w-full h-full bg-white rounded-lg overflow-hidden border border-zinc-800 shadow-lg">
-              <iframe
-                title="Artifact Preview"
-                srcDoc={previewSrcDoc}
-                className="w-full h-full border-none"
-                sandbox="allow-scripts"
-              />
-            </div>
-          ) : (
-            <div className="flex-1 w-full h-full rounded-lg overflow-hidden border border-zinc-800/80">
-              <Editor
-                height="100%"
-                language={getMonacoLanguage(currentFile.name)}
-                theme="vs-dark"
-                value={currentFile.content}
-                onChange={(val) => {
-                  dispatch(updateArtifactFileContent({ fileIdx: activeFileIdx, content: val || "" }));
-                }}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 12,
-                  lineNumbers: "on",
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                  padding: { top: 10, bottom: 10 },
-                  fontFamily: "Fira Code, Monaco, Courier New, monospace",
-                  cursorBlinking: "smooth",
-                  cursorSmoothCaretAnimation: "on",
-                  scrollbar: {
-                    vertical: "visible",
-                    horizontal: "visible",
-                  },
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Bottom ke actions (Copy aur Download buttons) */}
-        <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/40 flex items-center justify-end gap-2 shrink-0">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer"
-          >
-            {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-            <span>{copied ? "Copied!" : "Copy Code"}</span>
-          </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium text-white transition cursor-pointer shadow-md shadow-indigo-600/10"
-          >
-            <Download size={13} />
-            <span>Download</span>
-          </button>
-        </div>
       </div>
-    </div>
+    </>
   );
 };
 

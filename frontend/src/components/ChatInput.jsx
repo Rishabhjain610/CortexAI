@@ -35,7 +35,8 @@ const ChatInput = ({ onSendMessage, disabled }) => {
   const [model, setModel] = useState("CortexAI");
   const [selectedAgent, setSelectedAgent] = useState("auto");
   const [focused, setFocused] = useState(false);
-
+  const [selectedFile,setSelectedFile]=useState(null);
+  const fileref=useRef(null);
   const areaRef = useRef(null);
   const dropRef = useRef(null);
 
@@ -56,20 +57,26 @@ const ChatInput = ({ onSendMessage, disabled }) => {
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, []);
-
+  
   // final text submit payload send trigger
   const send = () => {
-    const t = text.trim();
-    if (!t || disabled) return;
-    onSendMessage(t, {
-      model,
-      agent: selectedAgent,
-    });
+    if (disabled || (!text.trim() && !selectedFile)) return;
+
+    const formData = new FormData();
+    if (selectedFile) {
+      formData.append("file", selectedFile);
+    }
+    formData.append("message", text.trim());
+    formData.append("model", model);
+    formData.append("agent", selectedAgent);
+    
+    onSendMessage(formData);
     setText("");
     if (areaRef.current) areaRef.current.style.height = "auto";
+    setSelectedFile(null);
   };
 
-  const canSend = !disabled && text.trim().length > 0;
+  const canSend = !disabled && (text.trim().length > 0 || selectedFile !== null);
 
   // agents icons button selection helper
   const toolBtn = (key, active, label, icon, onClick) => (
@@ -100,6 +107,44 @@ const ChatInput = ({ onSendMessage, disabled }) => {
           bg-base-850 border
           ${focused ? "border-accent-500/40 shadow-[0_0_0_3px_rgba(110,118,200,0.08),0_8px_28px_rgba(0,0,0,0.4)]" : "border-white/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"}`}
         >
+          {/* File Attachment Chip */}
+          {selectedFile && (
+            <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-base-800 border border-white/[0.1] text-[13px] text-base-200 shadow-sm">
+                {selectedFile.type?.startsWith("image/") ? (
+                  <div className="w-6 h-6 rounded-md overflow-hidden bg-base-900 border border-white/10 shrink-0">
+                    <img
+                      src={URL.createObjectURL(selectedFile)}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <FileText size={15} className="text-red-400 shrink-0" />
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate max-w-[220px] font-medium text-xs text-base-100">
+                    {selectedFile.name}
+                  </span>
+                  <span className="text-[10px] text-base-500 font-sans">
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type?.startsWith("image/") ? "Image" : "PDF Document"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileref.current) fileref.current.value = "";
+                  }}
+                  className="ml-1.5 p-0.5 rounded-full hover:bg-white/10 text-base-400 hover:text-base-100 transition-colors cursor-pointer"
+                  title="Remove attachment"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* main editor textarea element */}
           <div className="px-4 pt-4 pb-2">
             <textarea
@@ -130,11 +175,13 @@ const ChatInput = ({ onSendMessage, disabled }) => {
           {/* sub menus, attachment hooks aur submit action elements */}
           <div className="flex items-center justify-between px-3 pb-3 gap-2">
             {/* left options (attachment, agent selectors) */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none max-w-[calc(100vw-120px)] sm:max-w-none">
+              <input type="file" hidden accept='.pdf,image/*' ref={fileref} onChange={(e)=>setSelectedFile(e.target.files[0])} />
               <button
                 type="button"
                 disabled={disabled}
                 title="Attach"
+                onClick={()=>fileref.current.click()}
                 className="p-1.5 rounded-lg text-base-500 hover:text-base-300 hover:bg-base-800 cursor-pointer transition-colors"
               >
                 <Paperclip size={15} strokeWidth={1.75} />

@@ -68,8 +68,21 @@ const ChatArea = ({
   }, [selectedConversationId, justCreatedConvoId, dispatch]);
 
   // message send karne par trigger hone wala main handler
-  const handleSendMessage = async (text, options = {}) => {
-    if (!text.trim()) return;
+  const handleSendMessage = async (textOrFormData, options = {}) => {
+    // ChatInput FormData ya plain string — dono handle karte hain
+    let text, file;
+    if (textOrFormData instanceof FormData) {
+      text = textOrFormData.get("message") || "";
+      file = textOrFormData.get("file") || null;
+      const agent = textOrFormData.get("agent");
+      const model = textOrFormData.get("model");
+      if (agent) options = { ...options, agent };
+      if (model) options = { ...options, model };
+    } else {
+      text = textOrFormData || "";
+    }
+
+    if (!text.trim() && !file) return;
 
     const isFirstMessage = messages.length === 0;
     let convoId = selectedConversationId;
@@ -93,10 +106,14 @@ const ChatArea = ({
       convoId = newId;
     }
 
+    const fileLabel = file ? (file.type?.startsWith("image/") ? `🖼️ ${file.name}` : `📄 ${file.name}`) : "";
+    const userContentText = text ? (fileLabel ? `${text}\n\n[Attached: ${fileLabel}]` : text) : fileLabel;
+
     // 1. user ka text turant UI me show karne ke liye dummy message array me push
     const tempUserMsg = {
       role: "user",
-      content: text,
+      content: userContentText,
+      imagePreview: file && file.type?.startsWith("image/") ? URL.createObjectURL(file) : null,
       _id: `user-${Date.now()}`,
     };
     setMessages((prev) => [...prev, tempUserMsg]);
@@ -114,6 +131,9 @@ const ChatArea = ({
     let accumulatedImages = [];
     let accumulatedArtifacts = [];
     let accumulatedPdf = "";
+
+    // File present hone par options me daal do taaki sendMessage FormData mode use kare
+    if (file) options = { ...options, file };
 
     // 3. agent service se real-time chunks pull karna
     try {
@@ -141,7 +161,10 @@ const ChatArea = ({
     } catch (err) {
       console.error("Error sending message:", err);
       const is403 = err.message && err.message.includes("403");
-      const errorMsg = is403
+      const is401 = err.message && err.message.includes("401");
+      const errorMsg = is401
+        ? "⚠️ Your session has expired. Please log in again to continue."
+        : is403
         ? "⚠️ Insufficient credits. Please upgrade your subscription to continue."
         : "⚠️ Failed to get response from AI assistant. Please try again.";
         

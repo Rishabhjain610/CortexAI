@@ -18,11 +18,14 @@ app.use(
   }),
 );
 app.use(cookieParser());
-app.use(express.json());
 
 // Services routing proxy rules definition.
-// Auth service, Chat service, aur LangGraph agent service ke request patterns maps.
-app.use("/api/auth", proxy(process.env.AUTH_SERVICE_URL));
+// KYA AUR KYUN: 
+// 1. parseReqBody: false - Gateway me express.json() ya body parsing ko OFF rakha gaya hai taaki HTTP request body buffer (large JSON / file uploads) pre-consume na ho.
+// 2. Stream Preservation - Express proxy un-consumed raw stream ko direct downstream microservices ko pipe karta hai.
+// 3. /api/auth me parseReqBody: false explicitly set kiya gaya hai kyunki yeh raw proxy() call use karta hai (non-authenticated public routes jaise /login).
+// 4. /api/chat, /api/agent, aur /api/billing me proxyWithHeader utility use hoti hai, jisme parseReqBody: false aur 50mb limit already built-in defined hai.
+app.use("/api/auth", proxy(process.env.AUTH_SERVICE_URL, { parseReqBody: false }));
 app.use("/api/chat", requireAuth, proxyWithHeader(process.env.CHAT_SERVICE_URL));
 app.use("/api/agent", requireAuth, proxyWithHeader(process.env.AGENT_SERVICE_URL));
 app.use("/api/billing", requireAuth, proxyWithHeader(process.env.BILLING_SERVICE_URL));

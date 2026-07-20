@@ -1,3 +1,4 @@
+import fs from "fs";
 import axios from "axios";
 import graph from "../graph/graph.js";
 import { getModel } from "../config/model.js";
@@ -6,6 +7,7 @@ import { router } from "../graph/router.js";
 export const agent = async (req, res) => {
   try {
     const { prompt, conversationId, model, agent: selectedAgent } = req.body;
+    const file = req.file;
     console.log("req.body received in agent controller:", req.body);
 
     const userId = req.headers["x-user-id"];
@@ -17,7 +19,7 @@ export const agent = async (req, res) => {
     let targetAgent = selectedAgent;
     if (!targetAgent || targetAgent === "auto") {
       try {
-        const routingResult = await router({ prompt, agent: selectedAgent });
+        const routingResult = await router({ prompt, agent: selectedAgent, file });
         targetAgent = routingResult.agent;
       } catch (routingErr) {
         console.error("Failed to pre-determine routing for credit check:", routingErr.message);
@@ -32,7 +34,8 @@ export const agent = async (req, res) => {
       codingAgent: 10,
       pdfAgent: 10,
       pptAgent: 10,
-      imageAgent: 10,
+      pdfRagAgent: 10,
+      imageAnalyzer: 10,
     };
     const cost = CREDIT_COST_MAP[targetAgent] || 1;
 
@@ -99,12 +102,31 @@ export const agent = async (req, res) => {
         );
     }
 
+    // user uploaded image check karke base64 url format banaya
+    let userImages = [];
+    if (file && file.mimetype?.startsWith("image/") && file.path) {
+      try {
+        const b64 = fs.readFileSync(file.path, { encoding: "base64" });
+        userImages = [`data:${file.mimetype};base64,${b64}`];
+      } catch (e) {
+        console.error("Failed to read image for user message save:", e.message);
+      }
+    }
+
+    // user uploaded file attachment badge format
+    let savedContent = prompt;
+    if (file && file.originalname) {
+      const fileIcon = file.mimetype?.startsWith("image/") ? "🖼️" : "📄";
+      savedContent = prompt ? `${prompt}\n\n[Attached: ${fileIcon} ${file.originalname}]` : `${fileIcon} ${file.originalname}`;
+    }
+
     // user ka chat message backend db me save karne ke liye call
     await axios
       .post(`${process.env.CHAT_SERVICE}/save-message`, {
         conversationId,
         role: "user",
-        content: prompt,
+        content: savedContent,
+        images: userImages,
       })
       .catch((err) =>
         console.error("Error saving user message to database:", err.message),
@@ -119,7 +141,7 @@ export const agent = async (req, res) => {
 
     // LangGraph ke events suno aur token by token yield karo
     const stream = await graph.streamEvents(
-      { prompt, conversationId, history, model, agent: selectedAgent },
+      { prompt, conversationId, history, model, agent: selectedAgent, file },
       { version: "v2" },
     );
 
@@ -203,9 +225,9 @@ export const agent = async (req, res) => {
         const output = event.data.output;
         const agentNode = event.metadata?.langgraph_node;
 
-        // imageAgent / pdfAgent — final response + pdf link + images
+        // imageAgent / pdfAgent / pptAgent / pdfRagAgent — final response + pdf link + images
         if (
-          (agentNode === "imageAgent" || agentNode === "pdfAgent" || agentNode === "pptAgent") &&
+          (agentNode === "imageAgent" || agentNode === "pdfAgent" || agentNode === "pptAgent" || agentNode === "pdfRagAgent") &&
           output
         ) {
           if (output.aiResponse) {

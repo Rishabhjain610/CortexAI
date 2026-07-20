@@ -2,12 +2,39 @@
 // Router node function: User request ko dynamic classification (Keyword heuristics and LLM model) ke zariye sahi agent ko redirect karta hai.
 export const router = async (state) => {
   console.log("--- ROUTER NODE ---");
-  const { prompt, agent } = state;
+  const { prompt, agent, file } = state;
 
   // 1. Agar user ne manual panel me pehle se agent select kar rakha hai, toh seedhe use route kar do.
   if (agent && agent !== "auto") {
+    if ((agent === "pdfAgent" || agent === "pdfRagAgent") && file) {
+      console.log(`Routed manual PDF request with attached file to: pdfRagAgent`);
+      return { agent: "pdfRagAgent" };
+    }
     console.log(`Routed directly to manually selected agent: ${agent}`);
     return { agent };
+  }
+
+  // 1.5. Agar request me file uploaded hai, to mimetype & extension check karke direct target agent set karenge
+  if (file) {
+    const ext = (file.originalname || "").toLowerCase();
+    const mime = (file.mimetype || "").toLowerCase();
+    if (ext.endsWith(".pdf") || mime === "application/pdf") {
+      console.log(`Routed by File Type (.pdf) to: pdfRagAgent`);
+      return { agent: "pdfRagAgent" };
+    }
+    if (
+      mime.startsWith("image/") ||
+      ext.endsWith(".jpg") ||
+      ext.endsWith(".jpeg") ||
+      ext.endsWith(".png") ||
+      ext.endsWith(".webp") ||
+      ext.endsWith(".gif") ||
+      ext.endsWith(".bmp") ||
+      ext.endsWith(".svg")
+    ) {
+      console.log(`Routed by File Type (image) to: imageAnalyzer`);
+      return { agent: "imageAnalyzer" };
+    }
   }
 
   const cleanPrompt = (prompt || "").trim().toLowerCase();

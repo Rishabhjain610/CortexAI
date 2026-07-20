@@ -400,7 +400,7 @@ const Prose = ({ content, onImageClick }) => (
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
-        p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
+        p: ({ node, ...props }) => <div className="mb-3 last:mb-0" {...props} />,
         strong: ({ node, ...props }) => (
           <strong className="font-semibold text-base-100" {...props} />
         ),
@@ -701,11 +701,49 @@ const MessageArea = ({ messages, loading, selectedConversationId }) => {
         {messages.map((msg, i) => {
           // user prompt layout (right card)
           if (msg.role === "user") {
+            const userImg = msg.imagePreview || (msg.images && msg.images.length > 0 ? msg.images[0] : null);
+            
+            let promptText = msg.content || "";
+            let attachedPdfName = null;
+            if (promptText.includes("[Attached: 📄")) {
+              const match = promptText.match(/\[Attached: 📄 ([^\]]+)\]/);
+              if (match) {
+                attachedPdfName = match[1];
+                promptText = promptText.replace(/\n\n\[Attached: 📄 [^\]]+\]/, "").replace(/\[Attached: 📄 [^\]]+\]/, "").trim();
+              }
+            } else if (promptText.startsWith("📄 ")) {
+              attachedPdfName = promptText.replace("📄 ", "").trim();
+              promptText = "";
+            }
+
             return (
-              <div key={msg._id || i} className="flex justify-end">
-                <div className="max-w-[70%] bg-base-800 border border-white/[0.09] rounded-[18px] rounded-br-[4px] px-4 py-2.5 text-[14.5px] text-base-100 font-sans leading-relaxed">
-                  {msg.content}
-                </div>
+              <div key={msg._id || i} className="flex flex-col items-end gap-2">
+                {userImg && (
+                  <div className="max-w-[320px] rounded-2xl overflow-hidden border border-white/10 shadow-lg bg-base-850">
+                    <img
+                      src={userImg}
+                      alt="Uploaded preview"
+                      className="w-full h-auto max-h-[260px] object-cover cursor-pointer hover:scale-[1.015] transition-transform duration-300"
+                      onClick={() => setActiveLightboxImage(userImg)}
+                    />
+                  </div>
+                )}
+                {attachedPdfName && (
+                  <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-base-850 border border-white/10 text-xs text-base-200 shadow-md max-w-[300px]">
+                    <div className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 shrink-0">
+                      <FileText size={16} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate font-medium text-base-100">{attachedPdfName}</span>
+                      <span className="text-[10px] text-base-500">PDF Document</span>
+                    </div>
+                  </div>
+                )}
+                {promptText && (
+                  <div className="max-w-[70%] bg-base-800 border border-white/[0.09] rounded-[18px] rounded-br-[4px] px-4 py-2.5 text-[14.5px] text-base-100 font-sans leading-relaxed">
+                    {promptText}
+                  </div>
+                )}
               </div>
             );
           }
