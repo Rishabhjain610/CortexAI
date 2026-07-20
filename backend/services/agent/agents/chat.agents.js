@@ -5,12 +5,14 @@ import {
 } from "@langchain/core/messages";
 import { getModel } from "../config/model.js";
 
-// Chat agent node function: General queries aur conversations ko manage karne wala core agent hook.
+// Chat agent node — General queries, conversations, aur search-augmented responses handle karne wala core agent.
+// Ollama Minimax local model use karta hai: free, no API limits, fast local inference.
 export const chatAgent = async (state) => {
   console.log("--- CHAT AGENT ---");
 
   const llm = getModel("chatAgent");
   const now = new Date();
+  // Current date/time system prompt me inject kiya taaki "aaj kya date hai" jaisi queries sahi answer ho sakein
   const currentDateTimeString = now.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -63,7 +65,9 @@ Safety & SFW Guardrails:
     userContent = `Context / Search Results:\n${formattedResults}\n\n${imageList}\n\nUser Question:\n${state.prompt}`;
   }
 
-  // Previous chat history ko compile karke LangChain message formats me build karte hain.
+  // Multi-turn history ko LangChain message format me convert karo.
+  // Note: MongoDB me role "assistant" ya "bot" dono se save ho sakta hai — dono AIMessage me convert karo.
+  // HumanMessage: user ka message, AIMessage: assistant ka message
   const messages = [
     new SystemMessage(systemPrompt),
     ...(state.history || []).map((msg) => {

@@ -4,12 +4,15 @@ import graph from "../graph/graph.js";
 import { getModel } from "../config/model.js";
 import { router } from "../graph/router.js";
 
+// Agent Controller — Frontend se aaye AI request ko process karne wala main handler.
+// SSE (Server-Sent Events) stream open karke token-by-token response frontend tak bhejta hai.
 export const agent = async (req, res) => {
   try {
     const { prompt, conversationId, model, agent: selectedAgent } = req.body;
-    const file = req.file;
+    const file = req.file; // Multer middleware se parsed uploaded file (agar koi file attach hui ho)
     console.log("req.body received in agent controller:", req.body);
 
+    // x-user-id header Gateway ke proxyWithHeader utility ne inject kiya hota hai authenticated sessions ke liye
     const userId = req.headers["x-user-id"];
     if (!userId) {
       return res.status(400).json({ message: "User ID header is missing" });
@@ -73,7 +76,10 @@ export const agent = async (req, res) => {
       }
     }
 
-    // agar pehla message hai toh Groq Qwen se title generate karo
+    // Agar pehla message hai (history empty) toh conversation title auto-generate karo.
+    // titlePromise — Fire-and-forget pattern: Title generate karna SSE stream ke parallel chal sakta hai.
+    // await nahi kiya abhi — stream end hone se pehle title ban jaye ya na jaye, user ko wait nahi karwana.
+    // Stream complete hone ke baad (res.write("[DONE]") se pehle) titlePromise await karenge.
     let titlePromise = null;
     if (conversationId && history.length === 0) {
       const llm = getModel("chatAgent"); 
@@ -84,10 +90,12 @@ export const agent = async (req, res) => {
         .then(async (response) => {
           let title = (response.content || "")
             .trim()
-            .replace(/['"`]/g, "")
+            .replace(/['"`]/g, "") // LLM kabhi kabhi title quotes me wrap karta hai, usse hataate hain
             .trim();
+          // Agar LLM ne khaali title diya toh fallback — prompt ke pehle 5 words use karo
           if (!title)
             title = (prompt || "").trim().split(/\s+/).slice(0, 5).join(" ");
+          // Pehla letter capital karo — polish presentation ke liye
           title = title.charAt(0).toUpperCase() + title.slice(1);
           await axios.put(`${process.env.CHAT_SERVICE}/update-conversation`, {
             conversationId,
@@ -132,20 +140,27 @@ export const agent = async (req, res) => {
         console.error("Error saving user message to database:", err.message),
       );
 
-    // server-sent events (SSE) headers set kar rahe hain taaki chunks stream ho sakein
+    // SSE (Server-Sent Events) headers — browser ko batate hain ki yeh connection chunked streaming hai.
+    // Content-Type: text/event-stream — browser is format ko samajhta hai aur data: {...} lines parse karta hai.
+    // Cache-Control: no-cache — proxies ya CDN ko stream cache nahi karni chahiye.
+    // Connection: keep-alive — TCP connection stream ke dauran open rakho, close mat karo.
+    // X-Accel-Buffering: no — Nginx reverse proxy ke liye: response buffer mat karo, turant forward karo.
+    // flushHeaders() — Headers turant bhejo taaki browser streaming mode me aa jaye, body wait nahi kare.
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
 
-    // LangGraph ke events suno aur token by token yield karo
+    // LangGraph graph.streamEvents — v2 protocol use karo, har node event emit karta hai (on_chat_model_stream, on_chain_end etc.)
     const stream = await graph.streamEvents(
       { prompt, conversationId, history, model, agent: selectedAgent, file },
       { version: "v2" },
     );
 
-    // <think> block tracking — chatAgent aur pdfAgent dono ke liye shared flag
+    // thinkingActive flag — pdfAgent/pptAgent ke <think>...</think> block ko track karta hai.
+    // Qwen model apna internal reasoning <think> tags me wrap karta hai — yeh frontend ThoughtBox me dikhata hai.
+    // pdfAgent/pptAgent ke liye sirf thinking content stream karo, baaki JSON payload nahi (wo on_chain_end me aata hai).
     let thinkingActive = false;
 
     for await (const event of stream) {
@@ -154,26 +169,29 @@ export const agent = async (req, res) => {
         event.event === "on_llm_stream"
       ) {
         const node = event.metadata?.langgraph_node;
-        if (node === "router") continue; // router tokens hamesha skip
+        // Router node ke tokens kabhi stream mat karo — sirf classification output chahiye, readable text nahi
+        if (node === "router") continue;
 
         const chunk = event.data.chunk;
         const tokenText = chunk?.content || "";
 
-        // chatAgent: Minimax (Ollama) uses no think tokens — stream directly
+        // chatAgent (Ollama Minimax) — thinking tags nahi hote, direct token-by-token stream karo
         if (node === "chatAgent") {
           if (tokenText)
             res.write(`data: ${JSON.stringify({ text: tokenText })}\n\n`);
           continue;
         }
 
-        // pdfAgent aur pptAgent: sirf <think> block stream karo, JSON payload nahi
+        // pdfAgent / pptAgent — JSON payload token-by-token stream mat karo (garbage text dikhega).
+        // Sirf <think> block stream karo taaki ThoughtBox me reasoning dikhe.
+        // Actual JSON response on_chain_end event me complete milta hai — wahan se stream karenge.
         if (node === "pdfAgent" || node === "pptAgent") {
           if (tokenText.includes("<think>")) {
-            thinkingActive = true;
+            thinkingActive = true; // thinking block shuru — aage ke tokens ThoughtBox ke liye bhejo
             continue;
           }
           if (tokenText.includes("</think>")) {
-            thinkingActive = false;
+            thinkingActive = false; // thinking block khatam — aage ke tokens ignore karo
             continue;
           }
           if (thinkingActive)
@@ -267,7 +285,9 @@ export const agent = async (req, res) => {
       }
     }
 
-    // title complete hone ka wait karo fir stream end karenge
+    // Stream khatam hone se pehle title generation promise ka wait karo.
+    // Agar title pehle hi complete ho gaya ho toh yeh instantly resolve hoga.
+    // Agar abhi bhi pending ho toh wait karo — sidebar me galat title nahi chahiye.
     if (titlePromise) {
       try {
         await titlePromise;
@@ -276,6 +296,7 @@ export const agent = async (req, res) => {
       }
     }
 
+    // [DONE] signal bhejo — frontend ko batao ki stream complete ho gaya hai aur connection close kar sakte ho.
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (error) {

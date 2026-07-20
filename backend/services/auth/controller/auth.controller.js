@@ -5,37 +5,42 @@ import redis from "../../../shared/redis/redis.js";
 
 export const login = async (req, res) => {
   try {
+    // Cookie ya request body dono me se token accept karte hain (flexibility ke liye)
     const idToken = req.body.token || req.cookies.token;
     if (!idToken) {
       return res.status(400).json({ message: "Token is required" });
     }
 
-    // firebase verify check handles
+    // Firebase Admin SDK se Firebase ID token verify karte hain — JWT signature aur expiry check hota hai
     const authClient = getAuth(app);
     const decodedToken = await authClient.verifyIdToken(idToken);
     const { uid, email, name, picture } = decodedToken;
 
-    // user database me search checks and create user logic
+    // MongoDB me user dhundo. Nahi mila toh pehli baar login hai — naya user create karo.
     let user = await User.findOne({ firebaseUid: uid });
     if (!user) {
       user = await User.create({
         firebaseUid: uid,
+        // Name nahi mila toh email ka local part use karo (e.g. "rishabh" from "rishabh@gmail.com")
         name: name || email.split("@")[0],
         email: email,
         avatar: picture,
       });
     }
 
-    // Redis cache me session save logic
+    // Random UUID session ID generate kiya — predictable IDs se session hijacking ka risk hota hai
     const sessionID = crypto.randomUUID();
+    // Redis me session 5 din ke liye save kiya (EX = expire in seconds)
     await redis.set(`session:${sessionID}`, JSON.stringify(user), "EX", 5*24 * 60 * 60);
 
-    // cookie response header options settings
+    // HttpOnly cookie: JavaScript se access nahi ho sakti — XSS attacks se safe
+    // Secure: production me sirf HTTPS pe bhejo
+    // SameSite: lax — cross-site GET requests pe cookie bhejta hai, POST nahi (CSRF protection)
     res.cookie("sessionID", sessionID, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days
+      maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days milliseconds me
     });
 
     return res.status(200).json({
@@ -58,10 +63,10 @@ export const logout = async (req, res) => {
       return res.status(400).json({ message: "Session ID is required" });
     }
 
-    // Redis cache database se session remove logic
+    // Redis se session key delete karo — turant invalid ho jaayegi (next request 401 dega)
     await redis.del(`session:${sessionID}`);
 
-    // cookie clear logic
+    // Browser cookie bhi clear karo — dono jagah se session destroy
     res.clearCookie("sessionID", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -142,7 +147,8 @@ export const deductUserCredit = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     
-    // Check if user has enough credits for the specific agent's cost
+    // Credit gate-check — agar user ke paas enough credits nahi hain toh 403 return karo.
+    // Agent controller yeh 403 pakad ke user ko "Insufficient credits" error stream karta hai.
     if (user.credits < amount) {
       return res.status(403).json({ 
         message: `Insufficient credits. This request requires ${amount} credits, but you only have ${user.credits} remaining. Please upgrade your subscription.`,
@@ -154,7 +160,7 @@ export const deductUserCredit = async (req, res) => {
     user.credits -= amount;
     await user.save();
 
-    // Active user ke session details sync karne ke liye Redis cache update check kiya
+    // Credit deduct hone ke baad saari active Redis sessions sync karo taaki frontend stale credits na dikhaye.
     try {
       const keys = await redis.keys("session:*");
       for (const key of keys) {
@@ -164,10 +170,12 @@ export const deductUserCredit = async (req, res) => {
           const cachedId = cachedUser._id || cachedUser.id;
           if (cachedId === userId) {
             cachedUser.credits = user.credits;
+            // TTL preserve karna CRITICAL hai — agar EX set na karo toh key permanent ho jaati hai (session kabhi expire nahi hoti)
             const ttl = await redis.ttl(key);
             if (ttl > 0) {
               await redis.set(key, JSON.stringify(cachedUser), "EX", ttl);
             } else {
+              // TTL -1 hai (permanent key) — sirf data update karo, expiry set mat karo
               await redis.set(key, JSON.stringify(cachedUser));
             }
             console.log(`Updated Redis session credits for user ${userId} in key ${key}`);
