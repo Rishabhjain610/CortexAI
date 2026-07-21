@@ -1,5 +1,7 @@
 # CortexAI — Multi-Agent AI SaaS Platform
 
+https://github.com/user-attachments/assets/ff6c07df-7e9d-4c67-9011-3ef20b993f16
+
 CortexAI is a production-grade, credit-based AI SaaS platform powered by a microservices architecture and a dynamic multi-agent system. It orchestrates specialized AI agents using **LangGraph** and **LangChain** to handle diverse workflows — conversational chat, code generation, live web search, PDF/PPT document generation, PDF RAG (Retrieval-Augmented Generation), image generation, and multimodal vision analysis — with real-time **SSE token streaming** and **Hinglish-commented codebase** for learning-first development.
 
 ---
