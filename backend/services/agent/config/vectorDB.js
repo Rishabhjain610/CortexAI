@@ -25,3 +25,13 @@ export const vectorStore = async (docs, collection) => {
     throw error;
   }
 };
+
+// getVectorStore — Existing Qdrant collection se retrieve karne ke liye connection load karne ka helper.
+// Follow-up queries (bina direct file upload) me purani collection access karne ke liye use hota hai.
+export const getVectorStore = (collection) => {
+  return new QdrantVectorStore(geminiEmbeddings, {
+    url: process.env.QDRANT_ENDPOINT || process.env.QDRANT_END_POINT,
+    apiKey: (process.env.QDRANT_API_KEY || "").trim(),
+    collectionName: collection,
+  });
+};

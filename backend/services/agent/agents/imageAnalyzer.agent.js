@@ -63,15 +63,6 @@ export const imageAnalyzer = async (state) => {
       console.error("Image analysis invoke failed:", invokeErr);
       content = "Sorry, an error occurred while analyzing the image.";
     }
-  } finally {
-    // Delete temp file asynchronously to prevent blocking response and cleanup disk space
-    fs.unlink(file.path, (unlinkErr) => {
-      if (unlinkErr) {
-        console.error("Failed to delete temp file in imageAnalyzer:", unlinkErr.message);
-      } else {
-        console.log(`Successfully cleaned up temp file: ${file.path}`);
-      }
-    });
   }
 
   // <think> block formatting check for frontend ThoughtBox rendering

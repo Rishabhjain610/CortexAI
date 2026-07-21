@@ -248,7 +248,9 @@ export const agent = async (req, res) => {
           (agentNode === "imageAgent" || agentNode === "pdfAgent" || agentNode === "pptAgent" || agentNode === "pdfRagAgent") &&
           output
         ) {
-          if (output.aiResponse) {
+          // pdfRagAgent's text response is already streamed token-by-token in on_chat_model_stream.
+          // We bypass sending it again here to avoid duplicate rendering in the frontend.
+          if (output.aiResponse && agentNode !== "pdfRagAgent") {
             console.log(
               `Streaming final ${agentNode} response:`,
               output.aiResponse,
@@ -303,5 +305,15 @@ export const agent = async (req, res) => {
     console.error("Streaming error in agent controller:", error);
     res.write(`data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`);
     res.end();
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error("Failed to delete temp uploaded file in agent controller finally:", err.message);
+        } else {
+          console.log(`Successfully cleaned up temp uploaded file: ${req.file.path}`);
+        }
+      });
+    }
   }
 };

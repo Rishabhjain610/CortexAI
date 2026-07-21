@@ -162,11 +162,27 @@ const ChatArea = ({
       console.error("Error sending message:", err);
       const is403 = err.message && err.message.includes("403");
       const is401 = err.message && err.message.includes("401");
-      const errorMsg = is401
-        ? "⚠️ Your session has expired. Please log in again to continue."
-        : is403
-        ? "⚠️ Insufficient credits. Please upgrade your subscription to continue."
-        : "⚠️ Failed to get response from AI assistant. Please try again.";
+      
+      let errorMsg = "⚠️ Failed to get response from AI assistant. Please try again.";
+      
+      if (is401) {
+        errorMsg = "⚠️ Your session has expired. Please log in again to continue.";
+      } else if (is403) {
+        errorMsg = "⚠️ Insufficient credits. Please upgrade your subscription to continue.";
+      } else if (err.message) {
+        try {
+          const jsonStart = err.message.indexOf("{");
+          if (jsonStart !== -1) {
+            const jsonStr = err.message.slice(jsonStart);
+            const errObj = JSON.parse(jsonStr);
+            if (errObj.message) {
+              errorMsg = errObj.message;
+            }
+          }
+        } catch (parseErr) {
+          // JSON parsing failure fallback
+        }
+      }
         
       setMessages((prev) =>
         prev.map((msg) =>
