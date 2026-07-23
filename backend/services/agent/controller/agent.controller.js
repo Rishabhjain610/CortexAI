@@ -42,9 +42,11 @@ export const agent = async (req, res) => {
     };
     const cost = CREDIT_COST_MAP[targetAgent] || 1;
 
+    const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+    const chatServiceUrl = process.env.CHAT_SERVICE || process.env.CHAT_SERVICE_URL || "http://localhost:8002";
+
     // Request processing se pehle user ke credit check aur deduct karne ke liye auth service call kiya
     try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL;
       await axios.post(`${authServiceUrl}/deduct-credit`, { userId, amount: cost });
     } catch (err) {
       console.error("Credit deduction verification failed:", err.response?.data || err.message);
@@ -65,7 +67,7 @@ export const agent = async (req, res) => {
     if (conversationId) {
       try {
         const historyResponse = await axios.get(
-          `${process.env.CHAT_SERVICE}/get-messages/${conversationId}`,
+          `${chatServiceUrl}/get-messages/${conversationId}`,
         );
         history = historyResponse.data?.data || [];
       } catch (err) {
@@ -97,7 +99,7 @@ export const agent = async (req, res) => {
             title = (prompt || "").trim().split(/\s+/).slice(0, 5).join(" ");
           // Pehla letter capital karo — polish presentation ke liye
           title = title.charAt(0).toUpperCase() + title.slice(1);
-          await axios.put(`${process.env.CHAT_SERVICE}/update-conversation`, {
+          await axios.put(`${chatServiceUrl}/update-conversation`, {
             conversationId,
             title,
           });
@@ -130,7 +132,7 @@ export const agent = async (req, res) => {
 
     // user ka chat message backend db me save karne ke liye call
     await axios
-      .post(`${process.env.CHAT_SERVICE}/save-message`, {
+      .post(`${chatServiceUrl}/save-message`, {
         conversationId,
         role: "user",
         content: savedContent,

@@ -1,5 +1,90 @@
+version: "3.8"
+
 services:
   redis:
-    image: redis
+    image: redis:alpine
+    container_name: cortexai-redis
+    expose:
+      - "6379"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: cortexai-gateway
     ports:
-      - "6379:6379"
+      - "8000:8000"
+    env_file:
+      - ./gateway/.env
+    environment:
+      - PORT=8000
+      - AUTH_SERVICE_URL=http://auth:8001
+      - CHAT_SERVICE_URL=http://chat:8002
+      - AGENT_SERVICE_URL=http://agent:8003
+      - BILLING_SERVICE_URL=http://billing:8004
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - auth
+      - chat
+      - agent
+      - billing
+
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: cortexai-auth
+    expose:
+      - "8001"
+    env_file:
+      - ./services/auth/.env
+    environment:
+      - PORT=8001
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+
+  chat:
+    build:
+      context: .
+      dockerfile: services/chat/Dockerfile
+    container_name: cortexai-chat
+    expose:
+      - "8002"
+    env_file:
+      - ./services/chat/.env
+    environment:
+      - PORT=8002
+
+  agent:
+    build:
+      context: .
+      dockerfile: services/agent/Dockerfile
+    container_name: cortexai-agent
+    expose:
+      - "8003"
+    env_file:
+      - ./services/agent/.env
+    environment:
+      - PORT=8003
+      - AUTH_SERVICE_URL=http://auth:8001
+      - CHAT_SERVICE=http://chat:8002
+    depends_on:
+      - redis
+
+  billing:
+    build:
+      context: .
+      dockerfile: services/billing/Dockerfile
+    container_name: cortexai-billing
+    expose:
+      - "8004"
+    env_file:
+      - ./services/billing/.env
+    environment:
+      - PORT=8004
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth:8001
+    depends_on:
+      - redis
