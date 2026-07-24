@@ -57,19 +57,57 @@ export const router = async (state) => {
     return regex.test(cleanPrompt);
   };
 
-  // Explicit web search keywords — agar user ne "from net", "form net", "search", "google", "online" etc. specify kiya hai,
-  // toh active PDF session exist hone ke bawajood web search trigger hone do.
+  // Explicit action keywords check — pehle check karo taaki "generate image", "make ppt", "write code", "search net"
+  // jaise explicit actions active PDF session lock se override NA ho sakein.
+
+  // 1. Image generation keywords
+  const imageKeywords = [
+    "draw", "paint", "sketch", "illustration",
+    "generate image", "generate a image", "generate an image", "generate images",
+    "create image", "create a image", "create an image", "create images",
+    "make image", "make a image", "make an image", "make images",
+    "create photo", "create a photo", "generate photo", "generate a photo",
+    "picture of", "image of", "photo of", "art of",
+    "render image", "design image"
+  ];
+  if (imageKeywords.some(matchKeyword)) {
+    console.log(`Routed by Keyword Heuristic to: imageAgent`);
+    return { agent: "imageAgent" };
+  }
+
+  // 2. Explicit web search keywords
   const explicitSearchKeywords = [
     "from net", "form net", "from web", "form web", "search net", "search web", "google", "on net", "on web",
     "online", "tavily", "browse net", "browse web", "find online", "search for", "look up on net", "search google",
     "search", "internet", "from internet", "form internet", "on internet", "net search", "web search"
   ];
   const hasExplicitSearchIntent = explicitSearchKeywords.some(matchKeyword);
+  if (hasExplicitSearchIntent) {
+    console.log(`Routed by Keyword Heuristic to: searchAgent`);
+    return { agent: "searchAgent" };
+  }
+
+  // 3. Code/Programming keywords
+  const codingKeywords = [
+    "write code", "write a code", "write python", "write javascript", "write html", "write css", "write react",
+    "build app", "create website", "create webpage", "debug code", "fix code", "program in", "coding script"
+  ];
+  if (codingKeywords.some(matchKeyword)) {
+    console.log(`Routed by Keyword Heuristic to: codingAgent`);
+    return { agent: "codingAgent" };
+  }
+
+  // 4. PPT/Presentation keywords
+  const pptKeywords = ["ppt", "pptx", "presentation", "presentations", "presntation", "presenation", "presentaton", "slide", "slides", "powerpoint", "deck", "slideshow"];
+  if (pptKeywords.some(matchKeyword)) {
+    console.log(`Routed by Keyword Heuristic to: pptAgent`);
+    return { agent: "pptAgent" };
+  }
 
   // --- LAYER 1.8: Active PDF Session Check ---
-  // Agar session me active PDF collection exist karti hai AUR explicit web search intent nahi hai,
-  // toh follow-up questions seedha pdfRagAgent pe route karo.
-  if (conversationId && !hasExplicitSearchIntent) {
+  // Agar user ne koi explicit action (image, ppt, search, code) nahi maanga AUR session me active PDF collection exist karti hai,
+  // tabhi follow-up document questions pdfRagAgent pe route karo.
+  if (conversationId) {
     try {
       const { default: redis } = await import("../../../shared/redis/redis.js");
       const activeCollection = await redis.get(`pdf:collection:${conversationId}`);
@@ -93,7 +131,7 @@ export const router = async (state) => {
   const docKeywords = ["pdf", "pdfs", "document", "documents", "file", "files", "resume", "cv", "uploaded", "paper", "cgpa", "marks", "grade", "gpa"];
   const hasDocKeyword = docKeywords.some(matchKeyword);
 
-  // Web Search keywords
+  // General Web Search keywords
   const searchKeywords = [
     "search", "google", "tavily", "weather", "news", "current time", "time in", 
     "price", "rate", "cost", "how much", "buy", "shop", "stock", "shares", 
@@ -104,39 +142,9 @@ export const router = async (state) => {
     "from net", "form net", "from web", "form web", "on net", "on web", "net", "internet"
   ];
 
-  // Code/Programming keywords
-  const codingKeywords = [
-    "code", "coding", "program", "programming", "python", "javascript", "react", "html", "css", "java", 
-    "c++", "c#", "ruby", "rust", "function", "compile", "debug", "error", "api", 
-    "database", "sql", "website", "webpage", "web page", "app", "apps", "application", "applications",
-    "ui", "interface", "template", "page"
-  ];
-
-  // Image generation keywords
-  const imageKeywords = [
-    "draw", "paint", "sketch", "illustration",
-    "generate image", "generate a image", "generate an image",
-    "create image", "create a image", "create an image",
-    "make image", "make a image", "make an image",
-    "create photo", "create a photo", "generate photo", "generate a photo",
-    "picture of", "image of", "photo of",
-    "render image", "design image"
-  ];
-
-  // If prompt explicitly targets non-PDF actions (Code, Search, Image) AND does not mention document keywords:
-  if (!hasDocKeyword) {
-    if (imageKeywords.some(matchKeyword)) {
-      console.log(`Routed by Keyword Heuristic to: imageAgent`);
-      return { agent: "imageAgent" };
-    }
-    if (codingKeywords.some(matchKeyword)) {
-      console.log(`Routed by Keyword Heuristic to: codingAgent`);
-      return { agent: "codingAgent" };
-    }
-    if (searchKeywords.some(matchKeyword)) {
-      console.log(`Routed by Keyword Heuristic to: searchAgent`);
-      return { agent: "searchAgent" };
-    }
+  if (!hasDocKeyword && searchKeywords.some(matchKeyword)) {
+    console.log(`Routed by Keyword Heuristic to: searchAgent`);
+    return { agent: "searchAgent" };
   }
 
 
@@ -151,17 +159,6 @@ export const router = async (state) => {
     }
     console.log(`Routed by Keyword Heuristic to: pdfAgent`);
     return { agent: "pdfAgent" };
-  }
-
-  // PPT/Presentation keywords
-  const pptKeywords = ["ppt", "pptx", "presentation", "presentations", "presntation", "presenation", "presentaton", "slide", "slides", "powerpoint", "deck", "slideshow"];
-  if (pptKeywords.some(matchKeyword)) {
-    if (topicIndicators.some(matchKeyword)) {
-      console.log(`Routed by Keyword Heuristic (topic-ppt) to: searchAgent`);
-      return { agent: "searchAgent" };
-    }
-    console.log(`Routed by Keyword Heuristic to: pptAgent`);
-    return { agent: "pptAgent" };
   }
 
   // --- LAYER 3: LLM Fallback (Ollama Minimax, local) ---

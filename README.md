@@ -118,7 +118,7 @@ The **Agent Service** processes user queries dynamically through a StateGraph wi
 ### 📖 PDF RAG — Document Q&A (pdfRagAgent)
 - **`pdf-parse` ingestion** → regex page footer cleanup (`-- 2 of 9 --`) → noise chunk filter (< 30 chars)
 - **`RecursiveCharacterTextSplitter`** — `chunkSize: 1200`, `chunkOverlap: 250`
-- **Qdrant Vector DB** embedding via Google Gemini `gemini-embedding-001` or local `nomic-embed-text:v1.5`
+- **Qdrant Vector DB** embedding exclusively via local Ollama **`nomic-embed-text:v1.5`** (768-dim vectors, fast local inference, no cloud API cost)
 - **100MB File Upload Limit** — supports large documents up to 100MB
 - **BullMQ Auto-Queueing** — 10MB+ PDFs processed asynchronously via `pdf-rag-queue` background worker
 - **Top-10 similarity search** context injection into grounded LLM prompt

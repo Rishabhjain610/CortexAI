@@ -54,7 +54,7 @@ Expanse Rules:
   console.log(`Image Agent executed: ${llmInfo}`);
 
   return {
-    aiResponse: "",
+    aiResponse: "Here is your AI-generated image:",
     images: [downloadUrl],
   };
 };
