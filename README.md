@@ -135,6 +135,17 @@ The **Agent Service** processes user queries dynamically through a StateGraph wi
 - `<think>` reasoning preserved → ThoughtBox UI renders model's visual reasoning
 - Supports JPG, PNG, WEBP, GIF, BMP, SVG uploads
 
+### ⚡ BullMQ & Redis Background Queues
+CortexAI features an asynchronous job queue system built on **BullMQ** and **Redis** ([`agentQueues.js`](backend/services/agent/queues/agentQueues.js)):
+
+| Queue Name | Worker Name | Trigger Condition | Execution |
+|:---|:---|:---|:---|
+| `pdf-rag-queue` | `pdfRagWorker` | Large PDF Uploads (> 10MB up to 100MB) | Async PDF parsing, chunking, local `nomic-embed-text:v1.5` vector indexing into Qdrant, and LLM RAG response generation |
+| `ppt-gen-queue` | `pptWorker` | Slide deck generation | Async PPTX rendering and S3 upload |
+| `pdf-gen-queue` | `pdfGenWorker` | Report generation | Async PDF rendering and S3 upload |
+
+- **Queue Events Synchronization** — `pdfRagQueueEvents` tracks job state (`active`, `completed`, `failed`). The controller waits via `job.waitUntilFinished(pdfRagQueueEvents)` and streams the completed answer over SSE.
+
 ---
 
 ## 🔒 Security & Rate Limiting
