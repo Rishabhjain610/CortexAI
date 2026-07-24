@@ -66,9 +66,11 @@ workflow.addConditionalEdges(
       return "codingAgent";
     }
     
-    const pdfKeyword = ["pdf", "pdfs", "document", "documents", "file", "files", "invoice", "resume", "cv", "paper"];
-    if (pdfKeyword.some(matchKeyword)) {
-      console.log("Search complete. Routing to pdfAgent for pdf summary.");
+    const pdfGenCreationKeywords = [
+      "create pdf", "make pdf", "generate pdf", "download pdf", "export pdf", "build pdf", "create document", "generate report"
+    ];
+    if (pdfGenCreationKeywords.some(matchKeyword)) {
+      console.log("Search complete. Routing to pdfAgent for pdf file generation.");
       return "pdfAgent";
     }
     

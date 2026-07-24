@@ -21,12 +21,10 @@ export const groqStructured = new ChatGroq({
   temperature: 0,
 });
 
-// Groq Qwen Vision — Uploaded images analyze karne ke liye multimodal model.
-// temperature: 0.2 — Thoda creativity allow kiya hai taaki image descriptions descriptive hon, lekin hallucinate na kare.
-// Groq ke Qwen model ko image_url: { url: "data:..." } format me hi image dena padta hai (string nahi).
+// Groq LLaMA Vision — Uploaded images analyze karne ke liye multimodal model.
 export const groqVision = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
-  model: "qwen/qwen3.6-27b",
+  model: "llama-3.2-11b-vision-preview",
   temperature: 0.2,
 });
 
@@ -36,7 +34,7 @@ export const groqVision = new ChatGroq({
 // chatAgent aur pdfRagAgent dono ke liye use hota hai — low-latency local inference.
 export const ollama = new ChatOllama({
   model: "minimax-m3:cloud",
-  baseUrl: "http://localhost:11434",
+  baseUrl: process.env.OLLAMA_BASE_URL || "http://host.docker.internal:11434",
   numPredict: 4096,
   numCtx: 16384,
 });
@@ -44,7 +42,6 @@ export const ollama = new ChatOllama({
 // OpenRouter DeepSeek — Coding agent ke liye specialized model.
 // temperature: 0 — Code generation me creativity nahi chahiye, exact aur deterministic output chahiye.
 // maxTokens: 8192 — Complex code files aur explanations ke liye bada token limit set kiya hai.
-// Agar OpenRouter credits khatam hon ya 429 rate limit aye, deepseek.withFallbacks([groqStructured]) use karo.
 export const deepseek = new ChatOpenRouter({
   model: "deepseek/deepseek-chat",
   temperature: 0,
@@ -59,17 +56,17 @@ export const getModel = (agent) => {
     case "chatAgent":
       return ollama; // Chat — Ollama Minimax (local, no API limits)
     case "codingAgent":
-      return deepseek; // Code — OpenRouter DeepSeek (best for code)
+      return deepseek; // Code — OpenRouter DeepSeek V3
     case "pdfAgent":
       return groqStructured; // PDF generation — Groq LLaMA (structured JSON needed)
     case "pptAgent":
       return groqStructured; // PPT generation — Groq LLaMA (structured JSON needed)
     case "searchAgent":
-      return groq; // Search classification — Groq Qwen (thinking model for intent)
+      return groq; // Search — Groq Qwen 27B (thinking model)
     case "imageAgent":
-      return groq; // Image prompt generation — Groq Qwen
+      return groq; // Image prompt generation — Groq Qwen 27B
     case "imageAnalyzer":
-      return groqVision; // Vision analysis — Groq Qwen Vision (multimodal)
+      return groqVision; // Vision analysis — Groq LLaMA Vision (multimodal)
     case "pdfRagAgent":
       return ollama; // PDF RAG — Ollama Minimax (local, no API cost for heavy RAG workloads)
     default:

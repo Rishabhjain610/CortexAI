@@ -5,7 +5,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { getMe } from "./controller/user.controller.js";
 import { requireAuth } from "./middleware/auth.middleware.js";
-import proxyWithHeader from "./utils/proxyWithHeader.js"
+import { ipRateLimiter } from "./middleware/ipRateLimiter.js";
+import proxyWithHeader from "./utils/proxyWithHeader.js";
 
 dotenv.config();
 const app = express();
@@ -32,6 +33,9 @@ app.use(
   }),
 );
 app.use(cookieParser());
+
+// Global IP-based rate limiter middleware — protects Gateway and all downstream services against IP abuse
+app.use(ipRateLimiter);
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
 const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || "http://localhost:8002";

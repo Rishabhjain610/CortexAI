@@ -1,5 +1,11 @@
 import express from "express";
-import { agent } from "../controller/agent.controller.js";
+import {
+  agent,
+  enqueuePdfRag,
+  enqueuePptGen,
+  enqueuePdfGen,
+  getJobStatus,
+} from "../controller/agent.controller.js";
 import { handleUpload } from "../middleware/multer.middleware.js";
 import { slidingWindowRateLimiter } from "../config/Agentlimit.js";
 
@@ -13,10 +19,15 @@ router.get("/health", (req, res) => {
   });
 });
 
-// Agent interaction endpoint
-// Middleware chain: File upload parse → Sliding Window Rate Limit check → Agent controller
-// Rate limiter pehle run hoga — agar limit exceed ho toh 429 return karo, warna agent controller execute ho
+// Synchronous SSE agent interaction endpoint
 router.post("/chat", handleUpload.single("file"), slidingWindowRateLimiter, agent);
 
+// BullMQ Asynchronous Background Routes
+router.post("/async/rag", handleUpload.single("file"), slidingWindowRateLimiter, enqueuePdfRag);
+router.post("/async/ppt", slidingWindowRateLimiter, enqueuePptGen);
+router.post("/async/pdf", slidingWindowRateLimiter, enqueuePdfGen);
+router.get("/job/:jobId", getJobStatus);
+
 export default router;
+
 

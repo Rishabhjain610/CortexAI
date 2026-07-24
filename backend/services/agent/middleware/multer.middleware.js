@@ -30,6 +30,6 @@ export const handleUpload = multer({
     storage: storage,
     fileFilter: filterfile(),
     limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB file size limit
+        fileSize: 100 * 1024 * 1024, // 100MB file size limit
     }
 });

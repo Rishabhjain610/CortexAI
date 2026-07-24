@@ -22,7 +22,7 @@ export const agent = async (req, res) => {
     let targetAgent = selectedAgent;
     if (!targetAgent || targetAgent === "auto") {
       try {
-        const routingResult = await router({ prompt, agent: selectedAgent, file });
+        const routingResult = await router({ prompt, agent: selectedAgent, file, conversationId });
         targetAgent = routingResult.agent;
       } catch (routingErr) {
         console.error("Failed to pre-determine routing for credit check:", routingErr.message);
@@ -142,6 +142,64 @@ export const agent = async (req, res) => {
         console.error("Error saving user message to database:", err.message),
       );
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // 10MB+ PDF AUTO-QUEUE: PDFs > 10MB are routed to BullMQ pdf-rag-queue.
+    // The BullMQ worker processes parsing, text-splitting, Qdrant embedding,
+    // and LLM RAG response generation in the queue worker.
+    // The controller waits for job completion, streams the AI answer, and finishes.
+    // ─────────────────────────────────────────────────────────────────────────
+    const PDF_QUEUE_THRESHOLD_BYTES = 10 * 1024 * 1024; // 10 MB
+    const isPdfFile = file && (
+      file.mimetype === "application/pdf" ||
+      (file.originalname || "").toLowerCase().endsWith(".pdf")
+    );
+
+    if (isPdfFile && file.size > PDF_QUEUE_THRESHOLD_BYTES) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      console.log(
+        `[BullMQ Auto-Queue] 📦 Large PDF detected (${fileSizeMB} MB > 10 MB). ` +
+        `Enqueuing '${file.originalname}' to BullMQ pdf-rag-queue.`
+      );
+
+      const { pdfRagQueue, pdfRagQueueEvents } = await import("../queues/agentQueues.js");
+      const job = await pdfRagQueue.add("pdf-rag-ingest", {
+        filePath: file.path,
+        conversationId: conversationId || null,
+        prompt: prompt || "",
+        userId,
+      }, {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 2000 },
+      });
+
+      req.isQueued = true; // Prevents finally block from unlinking temp file before worker finishes
+
+      // Open SSE stream
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      // Wait for the BullMQ worker to finish processing and return the RAG answer
+      try {
+        const result = await job.waitUntilFinished(pdfRagQueueEvents);
+        if (result && result.aiResponse) {
+          console.log(`[BullMQ Auto-Queue] Streaming AI response for Job #${job.id}:`, result.aiResponse.slice(0, 100) + "...");
+          res.write(`data: ${JSON.stringify({ text: result.aiResponse })}\n\n`);
+        } else {
+          res.write(`data: ${JSON.stringify({ text: "PDF processed successfully in background queue." })}\n\n`);
+        }
+      } catch (queueErr) {
+        console.error(`[BullMQ Auto-Queue] Job #${job.id} failed:`, queueErr.message);
+        res.write(`data: ${JSON.stringify({ text: `Failed to process PDF in background queue: ${queueErr.message}` })}\n\n`);
+      }
+
+      res.write("data: [DONE]\n\n");
+      res.end();
+      return;
+    }
+
     // SSE (Server-Sent Events) headers — browser ko batate hain ki yeh connection chunked streaming hai.
     // Content-Type: text/event-stream — browser is format ko samajhta hai aur data: {...} lines parse karta hai.
     // Cache-Control: no-cache — proxies ya CDN ko stream cache nahi karni chahiye.
@@ -160,25 +218,32 @@ export const agent = async (req, res) => {
       { version: "v2" },
     );
 
+
     // thinkingActive flag — pdfAgent/pptAgent ke <think>...</think> block ko track karta hai.
     // Qwen model apna internal reasoning <think> tags me wrap karta hai — yeh frontend ThoughtBox me dikhata hai.
     // pdfAgent/pptAgent ke liye sirf thinking content stream karo, baaki JSON payload nahi (wo on_chain_end me aata hai).
     let thinkingActive = false;
 
-    for await (const event of stream) {
-      if (
-        event.event === "on_chat_model_stream" ||
-        event.event === "on_llm_stream"
-      ) {
-        const node = event.metadata?.langgraph_node;
-        // Router node ke tokens kabhi stream mat karo — sirf classification output chahiye, readable text nahi
-        if (node === "router") continue;
+    // Dedup flags — LangGraph emits multiple on_chain_end events as output propagates up through nested chain wrappers.
+    // Each flag locks after the FIRST aiResponse write so duplicates are silently ignored.
+    // Using booleans (not a Set keyed by agentNode) because wrapper events often have langgraph_node = undefined
+    // but still carry the full output, bypassing a Set guard keyed on the node name.
+    let pdfRagResponded = false;
+    let imageAgentResponded = false;
+    let pdfAgentResponded = false;
+    let pptAgentResponded = false;
 
+    for await (const event of stream) {
+      if (event.event === "on_chat_model_stream") {
+        const node = event.metadata?.langgraph_node;
         const chunk = event.data.chunk;
         const tokenText = chunk?.content || "";
 
-        // chatAgent (Ollama Minimax) — thinking tags nahi hote, direct token-by-token stream karo
-        if (node === "chatAgent") {
+        // Router node, pdfRagAgent, and imageAgent tokens should NOT be streamed token-by-token.
+        if (!node || node === "router" || node === "pdfRagAgent" || node === "imageAgent") continue;
+
+        // chatAgent (Ollama Minimax) — direct token-by-token stream
+        if (node === "chatAgent" || node === "codingAgent" || node === "searchAgent") {
           if (tokenText)
             res.write(`data: ${JSON.stringify({ text: tokenText })}\n\n`);
           continue;
@@ -200,78 +265,102 @@ export const agent = async (req, res) => {
             res.write(`data: ${JSON.stringify({ text: tokenText })}\n\n`);
           continue;
         }
-
-        // All other agents: direct stream
-        if (tokenText) {
-          res.write(`data: ${JSON.stringify({ text: tokenText })}\n\n`);
-        }
-      } else if (
-        event.event === "on_chain_end" &&
-        (event.name === "searchAgent" ||
-          event.metadata?.langgraph_node === "searchAgent")
-      ) {
-        // searchAgent images — PDF/PPT request ke liye skip karo
+      } else if (event.event === "on_chain_end") {
         const output = event.data.output;
+        // event.name = the exact runnable that fired (e.g. "pdfRagAgent", "LangGraph", "RunnableLambda")
+        // event.metadata.langgraph_node = the graph node containing the runnable
+        // Only emit when BOTH match the same agent name — this eliminates all wrapper chain duplicates.
+        const eventName = event.name;
+        const agentNode = event.metadata?.langgraph_node;
+
+        // pdfRagAgent — final answer from PDF RAG pipeline. Stream exactly once.
         if (
+          eventName === "pdfRagAgent" &&
+          agentNode === "pdfRagAgent" &&
+          output?.aiResponse &&
+          !pdfRagResponded
+        ) {
+          pdfRagResponded = true;
+          console.log(`Streaming final pdfRagAgent response:`, output.aiResponse);
+          res.write(`data: ${JSON.stringify({ text: output.aiResponse })}\n\n`);
+        }
+
+        // imageAgent — final image response. Stream exactly once.
+        if (
+          eventName === "imageAgent" &&
+          agentNode === "imageAgent" &&
+          output?.aiResponse &&
+          !imageAgentResponded
+        ) {
+          imageAgentResponded = true;
+          console.log(`Streaming final imageAgent response:`, output.aiResponse);
+          res.write(`data: ${JSON.stringify({ text: output.aiResponse })}\n\n`);
+        }
+
+        // imageAgent images array (only from the actual agent, not wrappers)
+        if (
+          eventName === "imageAgent" &&
+          agentNode === "imageAgent" &&
+          Array.isArray(output?.images) &&
+          output.images.length > 0
+        ) {
+          console.log(`Streaming images from imageAgent:`, output.images);
+          res.write(`data: ${JSON.stringify({ images: output.images })}\n\n`);
+        }
+
+        // pdfAgent — generated PDF download link. Stream exactly once.
+        if (
+          eventName === "pdfAgent" &&
+          agentNode === "pdfAgent" &&
           output &&
-          Array.isArray(output.images) &&
+          !pdfAgentResponded
+        ) {
+          if (output.aiResponse) {
+            pdfAgentResponded = true;
+            console.log(`Streaming final pdfAgent response:`, output.aiResponse);
+            res.write(`data: ${JSON.stringify({ text: output.aiResponse })}\n\n`);
+          }
+          if (output.pdf) {
+            console.log(`Streaming pdf from pdfAgent:`, output.pdf);
+            res.write(`data: ${JSON.stringify({ pdf: output.pdf })}\n\n`);
+          }
+        }
+
+        // pptAgent — generated PPT download link. Stream exactly once.
+        if (
+          eventName === "pptAgent" &&
+          agentNode === "pptAgent" &&
+          output &&
+          !pptAgentResponded
+        ) {
+          if (output.aiResponse) {
+            pptAgentResponded = true;
+            console.log(`Streaming final pptAgent response:`, output.aiResponse);
+            res.write(`data: ${JSON.stringify({ text: output.aiResponse })}\n\n`);
+          }
+          if (output.pdf) {
+            console.log(`Streaming pdf from pptAgent:`, output.pdf);
+            res.write(`data: ${JSON.stringify({ pdf: output.pdf })}\n\n`);
+          }
+        }
+
+        // searchAgent images (only from the actual searchAgent, not after routing to pdfAgent/pptAgent)
+        if (
+          (eventName === "searchAgent" || agentNode === "searchAgent") &&
+          Array.isArray(output?.images) &&
           output.images.length > 0
         ) {
           const cleanPrompt = (prompt || "").toLowerCase().trim();
           const pdfKeywords = ["file", "resume", "cv", "pdf", "document"];
-          const pptKeywords = [
-            "presentation",
-            "ppt",
-            "deck",
-            "slideshow",
-            "slide",
-          ];
+          const pptKeywords = ["presentation", "ppt", "deck", "slideshow", "slide"];
           const isPdfOrPpt =
             pdfKeywords.some((kw) => cleanPrompt.includes(kw)) ||
             pptKeywords.some((kw) => cleanPrompt.includes(kw)) ||
             selectedAgent === "pdfAgent" ||
             selectedAgent === "pptAgent";
-
           if (!isPdfOrPpt) {
             console.log("Streaming images from searchAgent:", output.images);
             res.write(`data: ${JSON.stringify({ images: output.images })}\n\n`);
-          } else {
-            console.log(
-              "Skipping searchAgent image streaming because agent is PDF/PPT.",
-            );
-          }
-        }
-      } else if (event.event === "on_chain_end") {
-        const output = event.data.output;
-        const agentNode = event.metadata?.langgraph_node;
-
-        // imageAgent / pdfAgent / pptAgent / pdfRagAgent — final response + pdf link + images
-        if (
-          (agentNode === "imageAgent" || agentNode === "pdfAgent" || agentNode === "pptAgent" || agentNode === "pdfRagAgent") &&
-          output
-        ) {
-          // pdfRagAgent's text response is already streamed token-by-token in on_chat_model_stream.
-          // We bypass sending it again here to avoid duplicate rendering in the frontend.
-          if (output.aiResponse && agentNode !== "pdfRagAgent") {
-            console.log(
-              `Streaming final ${agentNode} response:`,
-              output.aiResponse,
-            );
-            res.write(
-              `data: ${JSON.stringify({ text: output.aiResponse })}\n\n`,
-            );
-          }
-          if (
-            output.images &&
-            Array.isArray(output.images) &&
-            output.images.length > 0
-          ) {
-            console.log(`Streaming images from ${agentNode}:`, output.images);
-            res.write(`data: ${JSON.stringify({ images: output.images })}\n\n`);
-          }
-          if (output.pdf) {
-            console.log(`Streaming pdf from ${agentNode}:`, output.pdf);
-            res.write(`data: ${JSON.stringify({ pdf: output.pdf })}\n\n`);
           }
         }
 
@@ -308,7 +397,7 @@ export const agent = async (req, res) => {
     res.write(`data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`);
     res.end();
   } finally {
-    if (req.file && req.file.path) {
+    if (req.file && req.file.path && !req.isQueued) {
       fs.unlink(req.file.path, (err) => {
         if (err) {
           console.error("Failed to delete temp uploaded file in agent controller finally:", err.message);
@@ -319,3 +408,154 @@ export const agent = async (req, res) => {
     }
   }
 };
+
+// ===================================================================================
+// BullMQ Async Background Controllers (PDF RAG, PPT Gen, PDF Gen)
+// ===================================================================================
+import { pdfRagQueue, pptGenQueue, pdfGenQueue } from "../queues/agentQueues.js";
+
+// 1. Enqueue PDF RAG Indexing Job
+export const enqueuePdfRag = async (req, res) => {
+  try {
+    const { prompt, conversationId } = req.body;
+    const file = req.file;
+
+    if (!file || !file.path) {
+      return res.status(400).json({ message: "No PDF file attached for RAG indexing." });
+    }
+
+    const job = await pdfRagQueue.add("pdf-rag-ingest", {
+      filePath: file.path,
+      conversationId: conversationId || null,
+      prompt: prompt || "",
+      userId: req.headers["x-user-id"] || "anonymous",
+    }, {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 2000 },
+    });
+
+    // [BullMQ Producer Log] Print console alert when PDF RAG job is added to Redis queue
+    console.log(`[BullMQ Producer] 📥 Job #${job.id} successfully queued into 'pdf-rag-queue' for file: ${file.path}`);
+
+    return res.status(202).json({
+      success: true,
+      message: "PDF RAG indexing job queued successfully",
+      jobId: job.id,
+      queue: "pdf-rag-queue",
+    });
+  } catch (err) {
+    console.error("Error enqueuing PDF RAG job:", err);
+    return res.status(500).json({ message: "Failed to queue PDF RAG job", error: err.message });
+  }
+};
+
+// 2. Enqueue PPT Generation Job
+export const enqueuePptGen = async (req, res) => {
+  try {
+    const { prompt, searchResults, images } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ message: "Prompt is required for PPT generation." });
+    }
+
+    const job = await pptGenQueue.add("ppt-generate", {
+      prompt,
+      searchResults: searchResults || [],
+      images: images || [],
+      userId: req.headers["x-user-id"] || "anonymous",
+    }, {
+      attempts: 2,
+      backoff: { type: "exponential", delay: 3000 },
+    });
+
+    // [BullMQ Producer Log] Print console alert when PPT generation job is added to Redis queue
+    console.log(`[BullMQ Producer] 📥 Job #${job.id} successfully queued into 'ppt-gen-queue' for prompt: "${prompt}"`);
+
+    return res.status(202).json({
+      success: true,
+      message: "PPT presentation generation job queued successfully",
+      jobId: job.id,
+      queue: "ppt-gen-queue",
+    });
+  } catch (err) {
+    console.error("Error enqueuing PPT job:", err);
+    return res.status(500).json({ message: "Failed to queue PPT generation job", error: err.message });
+  }
+};
+
+// 3. Enqueue PDF Generation Job
+export const enqueuePdfGen = async (req, res) => {
+  try {
+    const { prompt, searchResults, images } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ message: "Prompt is required for PDF document generation." });
+    }
+
+    const job = await pdfGenQueue.add("pdf-generate", {
+      prompt,
+      searchResults: searchResults || [],
+      images: images || [],
+      userId: req.headers["x-user-id"] || "anonymous",
+    }, {
+      attempts: 2,
+      backoff: { type: "exponential", delay: 3000 },
+    });
+
+    // [BullMQ Producer Log] Print console alert when PDF document generation job is added to Redis queue
+    console.log(`[BullMQ Producer] 📥 Job #${job.id} successfully queued into 'pdf-gen-queue' for prompt: "${prompt}"`);
+
+    return res.status(202).json({
+      success: true,
+      message: "PDF document generation job queued successfully",
+      jobId: job.id,
+      queue: "pdf-gen-queue",
+    });
+  } catch (err) {
+    console.error("Error enqueuing PDF job:", err);
+    return res.status(500).json({ message: "Failed to queue PDF generation job", error: err.message });
+  }
+};
+
+// 4. Poll Job Status
+export const getJobStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Search across the three queues
+    const queues = [pdfRagQueue, pptGenQueue, pdfGenQueue];
+    let foundJob = null;
+
+    for (const queue of queues) {
+      const job = await queue.getJob(jobId);
+      if (job) {
+        foundJob = job;
+        break;
+      }
+    }
+
+    if (!foundJob) {
+      return res.status(404).json({ message: `Job with ID '${jobId}' not found.` });
+    }
+
+    const state = await foundJob.getState();
+    const result = foundJob.returnvalue || null;
+    const failedReason = foundJob.failedReason || null;
+
+    // [BullMQ Poller Log] Print console log whenever a client polls for job status
+    console.log(`[BullMQ Poller] 🔍 Polled Job #${foundJob.id} | State: '${state}' | Progress: ${foundJob.progress}%`);
+
+    return res.status(200).json({
+      success: true,
+      jobId: foundJob.id,
+      state, // "waiting", "active", "completed", "failed"
+      progress: foundJob.progress,
+      result,
+      failedReason,
+    });
+  } catch (err) {
+    console.error("Error getting BullMQ job status:", err);
+    return res.status(500).json({ message: "Failed to fetch job status", error: err.message });
+  }
+};
+

@@ -12,7 +12,7 @@ export const geminiEmbeddings = process.env.USE_LOCAL_EMBEDDINGS === "true"
   ? new OllamaEmbeddings({
       // nomic-embed-text v1.5 — 768-dim vectors, multilingual support, fast local inference
       model: "nomic-embed-text:v1.5",
-      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+      baseUrl: process.env.OLLAMA_BASE_URL || "http://192.168.31.166:11434",
     })
   : new GoogleGenerativeAIEmbeddings({
       // gemini-embedding-001 — Google ka latest embedding model, 3072-dim vectors, best semantic search quality

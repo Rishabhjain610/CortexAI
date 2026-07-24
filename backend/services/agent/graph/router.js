@@ -4,7 +4,7 @@
 // Layer 3: LLM fallback (Ollama Minimax, local, no API rate limits)
 export const router = async (state) => {
   console.log("--- ROUTER NODE ---");
-  const { prompt, agent, file } = state;
+  const { prompt, agent, file, conversationId } = state;
 
   // --- LAYER 1: Manual Selection ---
   // Agar user ne UI panel me pehle se koi agent manually select kar rakha hai toh seedha use route karo.
@@ -33,7 +33,6 @@ export const router = async (state) => {
     }
 
     // Image file detect hone par vision analyzer trigger karo
-    // Multiple extensions support kiye hain — jpg, jpeg, png, webp, gif, bmp, svg
     if (
       mime.startsWith("image/") ||
       ext.endsWith(".jpg") ||
@@ -58,6 +57,31 @@ export const router = async (state) => {
     return regex.test(cleanPrompt);
   };
 
+  // Explicit web search keywords — agar user ne "from net", "form net", "search", "google", "online" etc. specify kiya hai,
+  // toh active PDF session exist hone ke bawajood web search trigger hone do.
+  const explicitSearchKeywords = [
+    "from net", "form net", "from web", "form web", "search net", "search web", "google", "on net", "on web",
+    "online", "tavily", "browse net", "browse web", "find online", "search for", "look up on net", "search google",
+    "search", "internet", "from internet", "form internet", "on internet", "net search", "web search"
+  ];
+  const hasExplicitSearchIntent = explicitSearchKeywords.some(matchKeyword);
+
+  // --- LAYER 1.8: Active PDF Session Check ---
+  // Agar session me active PDF collection exist karti hai AUR explicit web search intent nahi hai,
+  // toh follow-up questions seedha pdfRagAgent pe route karo.
+  if (conversationId && !hasExplicitSearchIntent) {
+    try {
+      const { default: redis } = await import("../../../shared/redis/redis.js");
+      const activeCollection = await redis.get(`pdf:collection:${conversationId}`);
+      if (activeCollection) {
+        console.log(`Routed to pdfRagAgent due to active PDF collection in Redis: ${activeCollection}`);
+        return { agent: "pdfRagAgent" };
+      }
+    } catch (redisErr) {
+      console.error("Failed to check active PDF session in router:", redisErr.message);
+    }
+  }
+
   // Basic math expressions check (e.g. "1+1", "25 * 4", "tell me 1+1")
   const isMathQuery = /^[\d\s\+\-\*\/\(\)\.]{3,}$/.test(cleanPrompt) || /^\d+\s*[\+\-\*\/]\s*\d+$/.test(cleanPrompt) || /^\s*(tell|what|calculate|compute)?\s*(me)?\s*\d+\s*[\+\-\*\/]\s*\d+\s*$/i.test(cleanPrompt);
   if (isMathQuery) {
@@ -76,7 +100,8 @@ export const router = async (state) => {
     "live", "today", "yesterday", "forecast", "who is", "who was", "biography",
     "bio of", "born in", "born on", "spouse", "career of", "gather info", 
     "gather information", "research", "lookup", "look up", "info", "information", "details", 
-    "find out", "find details", "current", "latest", "recent", "about"
+    "find out", "find details", "current", "latest", "recent", "about",
+    "from net", "form net", "from web", "form web", "on net", "on web", "net", "internet"
   ];
 
   // Code/Programming keywords
@@ -114,21 +139,7 @@ export const router = async (state) => {
     }
   }
 
-  // --- LAYER 2.5: Active PDF Session Check ---
-  // Agar prompt me direct document keyword ho aur session active ho, toh seedha pdfRagAgent pe bhejo.
-  // Baaki cases Layer 3 LLM Classifier handle karega taaki RAG vs Chat Agent intelligent switching ho sake.
-  if (state.conversationId && hasDocKeyword) {
-    try {
-      const { default: redis } = await import("../../../shared/redis/redis.js");
-      const activeCollection = await redis.get(`pdf:collection:${state.conversationId}`);
-      if (activeCollection) {
-        console.log(`Routed to pdfRagAgent due to active PDF collection (doc keyword): ${activeCollection}`);
-        return { agent: "pdfRagAgent" };
-      }
-    } catch (redisErr) {
-      console.error("Failed to check active PDF session in router:", redisErr.message);
-    }
-  }
+
 
   // PDF keywords
   const topicIndicators = ["on", "about", "compare", "how to", "history", "explain", "topic", "information", "details"];
@@ -187,9 +198,19 @@ Reply with ONLY the agent name (e.g. pdfRagAgent or chatAgent). No explanation.`
 
 Reply with ONLY the agent name (e.g. chatAgent). No explanation.`;
 
-    const { HumanMessage, SystemMessage } = await import("@langchain/core/messages");
+    const { HumanMessage, SystemMessage, AIMessage } = await import("@langchain/core/messages");
+
+    // History se recent 4 messages convert kiye taaki LLM router past context aur pronouns (him, his, that) samajh sake
+    const recentHistoryMessages = (history || []).slice(-4).map((msg) => {
+      if (msg.role === "assistant" || msg.role === "bot") {
+        return new AIMessage((msg.content || "").slice(0, 300));
+      }
+      return new HumanMessage((msg.content || "").slice(0, 300));
+    });
+
     const response = await llm.invoke([
       new SystemMessage(systemPrompt),
+      ...recentHistoryMessages,
       new HumanMessage(prompt || ""),
     ]);
 

@@ -79,9 +79,8 @@ Safety & SFW Guardrails:
     new HumanMessage(userContent),
   ];
 
-  // LLM se response streaming reader trigger kiya.
+  // LLM se response streaming reader trigger kiya
   const responseStream = await llm.stream(messages);
-
   let content = "";
   for await (const chunk of responseStream) {
     content += chunk.content;

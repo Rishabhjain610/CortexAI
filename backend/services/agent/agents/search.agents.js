@@ -29,14 +29,14 @@ export function cleanSearchQuery(prompt) {
     }
   }
 
-  // Trailing context suffixes strip karo
-  // Example: "Elon Musk using html css" => "Elon Musk"
+  // Trailing context suffixes strip karo (e.g. "from net", "form net", "on web", "using html css")
   const suffixes = [
     /\s+using\s+(html|css|js|javascript|react|vue|vanilla).*$/i,
     /\s+gather\s+info\s+first.*$/i,
     /\s+gather\s+information\s+first.*$/i,
     /\s+search\s+first.*$/i,
     /\s+use\s+real\s+images.*$/i,
+    /\s+(from|form|on|in|via|through)?\s*(the\s+)?(net|web|internet|google|online)\s*$/i,
     /\s+(make|create|generate|build|design)\s+a?\s*(portfolio\s+)?(website|webpage|page|app|profile|portfolio|resume|cv).*$/i
   ];
 
@@ -47,10 +47,80 @@ export function cleanSearchQuery(prompt) {
   return query.trim();
 }
 
+// Helper function: History se target subject name extract karna (User messages pehle check karo)
+function extractTargetSubjectFromHistory(history) {
+  if (!Array.isArray(history) || history.length === 0) return null;
+
+  const excluded = new Set([
+    "CortexAI", "System", "Context", "PDF Document", "Job ID", "Project Context",
+    "TSEC Brochure", "Electric Billing", "Maha Mumbai", "Metro Operation", "Commercial Project",
+    "Smart India", "Hackathon Winners", "Top Recruiters", "Alumni Speaks"
+  ]);
+
+  // 1. Sabse pehle USER ke messages check karo — user ne jiska naam explicitly pucha tha (e.g. "who is rishabh jain")
+  for (let i = history.length - 1; i >= 0; i--) {
+    const msg = history[i];
+    if (msg.role === "user" && msg.content) {
+      const matches = msg.content.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g);
+      if (matches) {
+        const valid = matches.filter((n) => !excluded.has(n));
+        if (valid.length > 0) return valid[valid.length - 1];
+      }
+    }
+  }
+
+  // 2. Fallback: Assistant response me pehla primary mentioned name
+  for (let i = history.length - 1; i >= 0; i--) {
+    const msg = history[i];
+    if (msg.content) {
+      const matches = msg.content.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g);
+      if (matches) {
+        const valid = matches.filter((n) => !excluded.has(n));
+        if (valid.length > 0) return valid[0];
+      }
+    }
+  }
+
+  return null;
+}
+
 export const searchAgent = async (state) => {
   console.log("--- SEARCH AGENT ---");
   try {
-    const searchQuery = cleanSearchQuery(state.prompt);
+    let searchQuery = cleanSearchQuery(state.prompt);
+
+    // Agar search query me pronouns (him, his, he, she, her, this person) hain, toh history se subject name resolution
+    const containsPronoun = /\b(him|his|he|she|her|them|they|this person|that person|the author|the student)\b/i.test(searchQuery);
+    if (containsPronoun) {
+      const subjectName = extractTargetSubjectFromHistory(state.history);
+      if (subjectName) {
+        searchQuery = searchQuery.replace(
+          /\b(him|his|he|she|her|them|they|this person|that person|the author)\b/gi,
+          subjectName
+        );
+        console.log(`[Search Agent] Resolved pronoun in search query using user history: "${searchQuery}"`);
+      }
+    }
+
+    // Trailing filler suffixes clean up ("form net", "from net", "on net")
+    searchQuery = searchQuery
+      .replace(/\s+(from|form|on|in|via|through)?\s*(the\s+)?(net|web|internet|google|online)\s*$/gi, "")
+      .trim();
+
+    // Stopwords check — agar query cleaner chalne ke baad sirf stopwords ("from", "net", "search", "details") bachte hain,
+    // toh user history se target entity (e.g. "Rishabh Jain") extract karo
+    const stopWords = new Set(["from", "form", "net", "web", "online", "search", "google", "the", "for", "about", "more", "details", "info", "find", "a", "an", "of", "in", "on"]);
+    const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    const isStopWordOnly = words.length === 0 || words.every((w) => stopWords.has(w));
+
+    if (isStopWordOnly) {
+      const subjectName = extractTargetSubjectFromHistory(state.history);
+      if (subjectName) {
+        searchQuery = subjectName;
+        console.log(`[Search Agent] Query was stopword-only, resolved from user history to: "${searchQuery}"`);
+      }
+    }
+
     console.log(`Cleaned Search Query: "${searchQuery}"`);
 
     const results = await Search_tool.invoke({ query: searchQuery });

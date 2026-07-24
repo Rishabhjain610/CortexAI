@@ -112,19 +112,34 @@ export const updateConversation = async (req, res) => {
   }
 };
 
-// Kisi conversation ko database se permanent delete karne ka controller.
+// Kisi conversation ko database aur Redis cache se permanent delete karne ka controller.
 export const deleteConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
+
+    // 1. Conversation record MongoDB se delete karo
     const deletedConversation = await conversationModel.findByIdAndDelete(
       conversationId,
     );
+
+    // 2. Iss conversation ke saare messages bhi MongoDB se delete karo
+    await messageModel.deleteMany({ conversation: conversationId });
+
+    // 3. Redis cache se conversation history aur active PDF session keys clear karo
+    const cacheKey = `chat:history:${conversationId}`;
+    const pdfKey = `pdf:collection:${conversationId}`;
+    await redis.del(cacheKey);
+    await redis.del(pdfKey);
+
+    console.log(`[Delete Chat] Deleted conversation ${conversationId}, associated messages, and Redis keys (${cacheKey}, ${pdfKey})`);
+
     return res.status(200).json({
       success: true,
-      message: "Conversation deleted",
+      message: "Conversation and associated history deleted",
       data: deletedConversation,
     });
   } catch (error) {
+    console.error("Error deleting conversation:", error);
     return res.status(500).json({
       success: false,
       message: "Error deleting conversation",

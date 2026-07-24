@@ -6,8 +6,8 @@
 # -t cortexai-agent           -> Assigns tag/name to the output image
 # .                           -> Sets build context to root backend/ directory
 
-# Base Node.js environment image (lightweight Alpine Linux with Node 20)
-FROM node:20-alpine
+# Base Node.js environment image (Latest Node 25+ Alpine Linux)
+FROM node:current-alpine
 
 # Set container working directory to /app
 WORKDIR /app

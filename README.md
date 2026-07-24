@@ -44,8 +44,8 @@ graph TD
 * **API Gateway (`gateway`)**: The single entry point. Handles routing, session authentication, and passes custom headers (like user context) to internal microservices via `proxyWithHeader`. Uses `parseReqBody: false` for raw binary stream forwarding.
 * **Auth Service (`auth`)**: Handles Firebase authentication, user management, and exposes credit verification and credit deduction endpoints (`/deduct-credit`). Syncs credit balance back to all active Redis sessions after each deduction.
 * **Billing Service (`billing`)**: Manages pricing plans (Pro/Business), Razorpay order creation, HMAC-SHA256 signature verification, payment recording, and credit top-up via Auth Service.
-* **Chat Service (`chat`)**: Maintains conversation records and message history in MongoDB. Implements Redis cache layer (`chat:history:{id}`, 30-minute TTL) for low-latency history fetching.
-* **Agent Service (`agent`)**: The core cognitive engine. Orchestrates multiple specialized LLM agents using a LangGraph StateGraph workflow with real-time SSE streaming.
+* **Chat Service (`chat`)**: Maintains conversation records and message history in MongoDB. Implements Redis cache layer (`chat:history:{id}`, 30-minute TTL). When a chat is deleted, purges MongoDB messages and deletes Redis keys (`chat:history:{id}` and `pdf:collection:{id}`).
+* **Agent Service (`agent`)**: The core cognitive engine. Orchestrates multiple specialized LLM agents using a LangGraph StateGraph workflow with real-time SSE streaming. Features **BullMQ + Redis background queues** (`pdf-rag-queue`, `ppt-gen-queue`, `pdf-gen-queue`) for processing 10MB+ files asynchronously.
 
 ### 2. Model Dispatcher & Routing (`config/model.js`)
 
@@ -62,17 +62,16 @@ graph TD
 
 ---
 
-## 🧠 Cognitive Orchestration (LangGraph Workflow)
+## 🧠 Cognitive Orchestration (LangGraph Workflow & BullMQ Queues)
 
-The **Agent Service** processes user queries dynamically through a StateGraph:
+The **Agent Service** processes user queries dynamically through a StateGraph with BullMQ background queueing:
 
 1. **Routing (`router` Node)**: 3-layer classification — manual selection → keyword heuristics → Ollama LLM fallback. Determines agent type before any LLM call.
-2. **Sliding Window Rate Limiter**: Redis sorted-set rate limiter runs before agent execution. Returns `HTTP 429` with exact `retryAfterSeconds` if limit exceeded.
-3. **Credit Gate**: Auth Service called to deduct credits for the specific agent before starting the LangGraph stream.
-4. **Conditional Paths**:
-   - A prompt requiring search runs the **Search Agent** (Tavily API), which queries live web data with image fetching.
-   - Based on results, routes to **Coding Agent** (build webpages), **PDF/PPT Agents** (format and package results), or **Chat Agent** (answer directly).
-5. **Execution & SSE Streaming**: `graph.streamEvents({ version: "v2" })` streams thinking logs and output tokens token-by-token to the client.
+2. **10MB+ BullMQ Auto-Queueing**: Large PDF uploads (>10MB up to 100MB) are automatically enqueued to BullMQ `pdf-rag-queue`. The background worker (`pdfRagWorker`) handles parsing, text splitting, Qdrant vector embedding, and LLM RAG answer generation, notifying the controller via `QueueEvents`.
+3. **Explicit Web Search Intent Bypass**: When a prompt contains explicit web search keywords (`"from net"`, `"from web"`, `"google"`, `"online"`, `"tavily"`), the router bypasses active PDF session keys in Redis and routes directly to `searchAgent`.
+4. **Sliding Window Rate Limiter**: Redis sorted-set rate limiter runs before agent execution. Returns `HTTP 429` with exact `retryAfterSeconds` if limit exceeded.
+5. **Credit Gate**: Auth Service called to deduct credits for the specific agent before starting the LangGraph stream.
+6. **Execution & SSE Streaming**: `graph.streamEvents({ version: "v2" })` streams thinking logs and output tokens token-by-token to the client.
 
 ---
 
@@ -82,6 +81,7 @@ The **Agent Service** processes user queries dynamically through a StateGraph:
 - **8 Specialized Agents** — Chat, Coding, Search, PDF Generation, PPT Generation, PDF RAG, Image Generation, Image Analysis
 - **3-Layer Intelligent Router** — Manual selection → Keyword heuristics → Local LLM fallback (Ollama Minimax, no API cost)
 - **LangGraph StateGraph** — Directed acyclic graph workflow with conditional edges (e.g. searchAgent → codingAgent chain)
+- **BullMQ + Redis Background Workers** — Async job queues (`pdf-rag-queue`, `ppt-gen-queue`, `pdf-gen-queue`) for heavy 10MB+ document processing
 - **Real-time SSE Streaming** — Token-by-token streaming with `X-Accel-Buffering: no` for Nginx compatibility
 
 ### 💬 Conversational Chat (chatAgent)
@@ -99,9 +99,11 @@ The **Agent Service** processes user queries dynamically through a StateGraph:
 
 ### 🔍 Web Search (searchAgent)
 - **Tavily Search API** — top 5 results with images (`includeImages: true`, `autoParameters: true`)
+- **Multi-Turn Entity & Pronoun Resolution** — resolves pronouns (`him`, `his`, `he`, `she`, `this person`) by scanning previous **user message history** (e.g., resolving *"search details about him"* to *"Rishabh Jain"*)
+- **Stop-Word Search Fallback** — converts queries containing only stop-words (`"from net"`, `"search"`, `"details"`) into the active entity subject from chat history
 - Smart query cleaning — strips conversational prefixes ("make a pdf about...", "generate resume for...") before sending to Tavily
 - Image deduplication with `Set` — no duplicate URLs in results
-- Routes to codingAgent post-search when coding intent detected
+- Strict post-search routing — requires explicit PDF creation verbs (`"create pdf"`, `"make pdf"`) to route to `pdfAgent`; general queries (e.g., *"give details in pdf from net"*) summarize findings via `chatAgent`
 
 ### 📄 PDF Document Generation (pdfAgent)
 - Groq LLaMA 70B structured JSON generation → rendered PDF
@@ -115,9 +117,11 @@ The **Agent Service** processes user queries dynamically through a StateGraph:
 
 ### 📖 PDF RAG — Document Q&A (pdfRagAgent)
 - **`pdf-parse` ingestion** → regex page footer cleanup (`-- 2 of 9 --`) → noise chunk filter (< 30 chars)
-- **`RecursiveCharacterTextSplitter`** — `chunkSize: 1000`, `chunkOverlap: 150`
+- **`RecursiveCharacterTextSplitter`** — `chunkSize: 1200`, `chunkOverlap: 250`
 - **Qdrant Vector DB** embedding via Google Gemini `gemini-embedding-001` or local `nomic-embed-text:v1.5`
-- **Top-3 similarity search** context injection into grounded LLM prompt
+- **100MB File Upload Limit** — supports large documents up to 100MB
+- **BullMQ Auto-Queueing** — 10MB+ PDFs processed asynchronously via `pdf-rag-queue` background worker
+- **Top-10 similarity search** context injection into grounded LLM prompt
 - **Multi-turn history** — follow-up questions remember previous RAG turns (no re-upload needed)
 - Fallback query when no prompt provided: `"Summarize the key contents..."`
 
@@ -176,11 +180,17 @@ Window: 60 seconds | Key: ratelimit:{userId}:{agentName}
 ```
 Layer 1: Manual agent selection (user UI panel)
     ↓ (if "auto")
+Layer 1.5: File-type routing (.pdf → pdfRagAgent, image → imageAnalyzer)
+    ↓
+Layer 1.8: Active PDF Session Check (with explicit web search bypass)
+    ↓ (if "auto" and no active PDF)
 Layer 2: Deterministic keyword heuristics (O(n) regex, no LLM call)
     ↓ (no keyword match)
-Layer 3: Ollama Minimax LLM classification (local, no API cost, no rate limits)
+Layer 3: Ollama Minimax LLM classification with multi-turn chat history (local, no API cost, no rate limits)
 ```
 
+- **Multi-Turn Chat History Ingestion** — Layer 3 passes recent 4 conversation turns into Ollama LLM classifier for context-aware routing decisions.
+- **Explicit Web Search Intent Bypass** — prompts containing `"from net"`, `"form net"`, `"google"`, `"online"` bypass active Redis PDF sessions and execute web search.
 - **Word-boundary regex** — prevents substring collisions (e.g. `"rate"` inside `"generate"`)
 - **Topic indicators** — `"pdf about history"` → searchAgent (not pdfAgent)
 - **File-type routing** — `.pdf` → pdfRagAgent, `image/*` → imageAnalyzer (before keyword check)
@@ -188,11 +198,11 @@ Layer 3: Ollama Minimax LLM classification (local, no API cost, no rate limits)
 
 ---
 
-## 🗂️ File Attachments & Multimodal
+## 🗠 File Attachments & Multimodal
 
 ### Upload Pipeline
-- **Multer** file upload middleware — 50MB limit, supports PDF + all image formats
-- **Gateway proxy** — `parseReqBody: false` + `limit: "50mb"` preserves raw binary stream to Agent service
+- **Multer** file upload middleware — **100MB limit**, supports PDF + all image formats
+- **Gateway proxy** — `parseReqBody: false` + `limit: "100mb"` preserves raw binary stream to Agent service
 - File type detection: MIME type + file extension dual-check
 
 ### Chat Attachment Display

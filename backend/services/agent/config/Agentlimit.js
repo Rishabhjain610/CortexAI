@@ -10,78 +10,39 @@ import redis from "../../../shared/redis/redis.js";
 //   Yahan Score = timestamp (ms), isliye automatically oldest → newest order milta hai.
 //
 // -----------------------------------------------------------------------------------
-// ZADD key score member
+// REDIS Z-COMMANDS GLOSSARY & MEANINGS (Sorted Set Operations):
 // -----------------------------------------------------------------------------------
-//   Naya element sorted set me insert karta hai.
-//   Score   = current timestamp in milliseconds (sorting key)
-//   Member  = score ka string (member unique hona chahiye — duplicate member ka score update ho jaata hai)
+// 1. ZADD (Sorted Set Add)
+//    - Full Form: Sorted Set Add
+//    - Syntax: ZADD key score member
+//    - Meaning: Naya element/member numeric "score" ke saath sorted set me insert karta hai.
+//    - Score = current timestamp in ms, Member = timestamp string.
+//    - Example: redis.zadd("ratelimit:user1:chatAgent", 1720000060000, "1720000060000")
 //
-//   redis.zadd("ratelimit:user1:chatAgent", 1720000060000, "1720000060000")
+// 2. ZREMRANGEBYSCORE (Sorted Set Remove Range By Score)
+//    - Full Form: Sorted Set Remove Range By Score
+//    - Syntax: ZREMRANGEBYSCORE key min max
+//    - Meaning: Minimum aur maximum score range ke beech ke sabhi old elements delete karta hai.
+//    - Min = "-inf" (infinity purana), Max = windowStart (60 seconds pehle ka time).
+//    - Example: redis.zremrangebyscore("ratelimit:user1:chatAgent", "-inf", 1720000000000)
 //
-//   Sorted Set State after ZADD:
-//   ┌──────────────────────────────────────────┐
-//   │  SCORE (ms timestamp)  │  MEMBER         │
-//   ├────────────────────────┼─────────────────┤
-//   │  1720000010000         │ "1720000010000" │  ← 50 seconds pehle ki request
-//   │  1720000040000         │ "1720000040000" │  ← 20 seconds pehle ki request
-//   │  1720000060000         │ "1720000060000" │  ← current request (abhi add hui)
-//   └──────────────────────────────────────────┘
+// 3. ZCOUNT (Sorted Set Count)
+//    - Full Form: Sorted Set Count
+//    - Syntax: ZCOUNT key min max
+//    - Meaning: Range min-max ke andar kitni valid entries (requests) bachi hain wo count karta hai.
+//    - Min = windowStart (60s ago), Max = "+inf" (current time).
+//    - Example: redis.zcount("ratelimit:user1:chatAgent", 1720000000000, "+inf")
 //
-// -----------------------------------------------------------------------------------
-// ZREMRANGEBYSCORE key min max
-// -----------------------------------------------------------------------------------
-//   Score range ke beech ke sab members delete karta hai.
-//   Min = "-inf"        → negative infinity (koi bhi purana score)
-//   Max = windowStart   → now - 60000 (60 seconds pehle ka timestamp)
+// 4. EXPIRE (Key Time To Live / Auto Clean)
+//    - Syntax: EXPIRE key seconds
+//    - Meaning: Key ki TTL set karta hai (60 seconds). Idle user data auto cleanup karta hai (Memory leak prevention).
 //
-//   redis.zremrangebyscore("ratelimit:user1:chatAgent", "-inf", 1720000000000)
-//
-//   BEFORE (windowStart = 1720000000000):      AFTER (sirf last 60s bachi):
-//   ┌─────────────────────────────────┐        ┌──────────────────────────────────┐
-//   │ 1719999990000 ← 70s old DELETED │        │ 1720000010000 ← 50s old  KEPT   │
-//   │ 1720000000000 ← 60s old DELETED │        │ 1720000040000 ← 20s old  KEPT   │
-//   │ 1720000010000 ← 50s old KEPT    │  ───►  │ 1720000060000 ← now      KEPT   │
-//   │ 1720000040000 ← 20s old KEPT    │        └──────────────────────────────────┘
-//   │ 1720000060000 ← now     KEPT    │
-//   └─────────────────────────────────┘
-//   NOTE: ZADD PEHLE karo, ZREMRANGEBYSCORE BAAD ME — warna current request bhi delete ho sakti hai!
-//
-// -----------------------------------------------------------------------------------
-// ZCOUNT key min max
-// -----------------------------------------------------------------------------------
-//   Score range ke andar kitne members hain count karta hai (delete nahi karta).
-//   Min = windowStart  → last 60 seconds se
-//   Max = "+inf"       → current time tak aur aage bhi (practically sirf current tak)
-//
-//   redis.zcount("ratelimit:user1:chatAgent", 1720000000000, "+inf")
-//   → Returns: 3  (3 requests in last 60 seconds, including current one)
-//
-// -----------------------------------------------------------------------------------
-// EXPIRE key seconds
-// -----------------------------------------------------------------------------------
-//   Key ka TTL (Time To Live) set karta hai — expire hone par key auto-delete ho jaati hai.
-//   TTL = 60 seconds = WINDOW_MS / 1000
-//
-//   Bina EXPIRE ke kya hota:
-//   User ek baar request kare, fir 2 ghante baad aaye — purani entries Redis me forever rahti hain.
-//   Har user ke liye memory accumulate hoti rahti → MEMORY LEAK!
-//   EXPIRE se guarantee hai: agar 60s me koi request nahi aayi toh key khud saaf ho jaati hai.
-//
-// -----------------------------------------------------------------------------------
-// ZRANGE key start stop WITHSCORES
-// -----------------------------------------------------------------------------------
-//   Index range se members fetch karta hai (lowest → highest score order me).
-//   Index 0 = sabse purana member (lowest score = oldest timestamp)
-//   WITHSCORES = [member, score, member, score, ...] format me return karta hai
-//
-//   redis.zrange("ratelimit:user1:chatAgent", 0, 0, "WITHSCORES")
-//   → ["1720000010000", "1720000010000"]  (oldest member aur uska score)
-//
-//   Retry-After calculation:
-//   oldest = 1720000010000  (50 seconds pehle)
-//   now    = 1720000060000
-//   retryAfterMs = WINDOW_MS - (now - oldest) = 60000 - 50000 = 10000ms = 10 seconds
-//   Matlab 10 seconds baad oldest request expire ho jaayegi aur ek slot free hoga.
+// 5. ZRANGE (Sorted Set Range By Index)
+//    - Full Form: Sorted Set Range
+//    - Syntax: ZRANGE key start stop WITHSCORES
+//    - Meaning: Position/index ke base pe element fetch karta hai. Index 0 = sabse purana request timestamp.
+//    - WITHSCORES option member aur timestamp score dono return karta hai retryAfter calculation ke liye.
+// ===================================================================================
 //
 // -----------------------------------------------------------------------------------
 // Fixed Window vs Sliding Window — Kyun Sliding better hai?
