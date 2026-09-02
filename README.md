@@ -1,10 +1,18 @@
-# CortexAI — Multi-Agent AI SaaS Platform
+# CortexAI — Agentic AI SaaS Platform
 
 https://github.com/user-attachments/assets/ff6c07df-7e9d-4c67-9011-3ef20b993f16
 
-CortexAI is a production-grade, credit-based AI SaaS platform powered by a microservices architecture and a dynamic multi-agent system. It orchestrates specialized AI agents using **LangGraph** and **LangChain** to handle diverse workflows — conversational chat, code generation, live web search, PDF/PPT document generation, PDF RAG (Retrieval-Augmented Generation), image generation, and multimodal vision analysis — with real-time **SSE token streaming** and **Hinglish-commented codebase** for learning-first development.
+> **Tech Stack:** `LangGraph` • `LangChain` • `Qdrant` • `Redis` • `BullMQ` • `Docker` • `AWS S3` • `Razorpay` • `Node.js` • `Express` • `React`
+
+CortexAI is a production-grade, credit-based **Agentic AI SaaS Platform** powered by a distributed microservices architecture and dynamic multi-agent orchestration. It coordinates specialized AI agents using **LangGraph** and **LangChain** to handle conversational chat, code generation, live web search, PDF & PPT document generation, PDF RAG (Retrieval-Augmented Generation) with Qdrant embeddings, image generation, and multimodal vision analysis — complete with real-time **SSE token streaming**, **BullMQ async queues**, and **Redis sliding-window rate limiting**.
 
 ---
+
+## 📄 Resume Summary & Key Highlights
+* **Distributed Microservices Architecture:** Architected distributed 4-service microservices with API Gateway orchestrating Auth, Billing, Chat, and Agent services; implemented REST APIs and Redis sync enabling fault isolation and elastic scaling across distributed systems.
+* **End-to-End RAG Pipeline & Multi-Agent Orchestration:** Built end-to-end RAG pipeline with Qdrant embeddings for semantic document Q&A with persistent memory; orchestrated 8 LangGraph agents: Chat, Coding, Web Search, RAG, Image Analysis, Image Generation, PDF Generation, PPT Generation.
+* **Async Job Queues, Billing & Rate Limiting:** Implemented BullMQ job queue for async processing (>10MB documents) and Razorpay billing with sliding-window rate limiting.
+
 
 ## 🏛️ System Architecture
 
@@ -423,6 +431,12 @@ cd backend/services/chat    && npm run dev    # :8004
 
 ## 📋 ATS Resume Points
 
+### 🎯 Primary Resume Bullets
+* **Architected distributed 4-service microservices with API Gateway** orchestrating Auth, Billing, Chat, and Agent services; implemented REST APIs and Redis sync enabling fault isolation and elastic scaling across distributed systems.
+* **Built end-to-end RAG pipeline with Qdrant embeddings** for semantic document Q&A with persistent memory; orchestrated 8 LangGraph agents: Chat, Coding, Web Search, RAG, Image Analysis, Image Generation, PDF/PPT generation.
+* **Implemented BullMQ job queue** for async processing and Razorpay billing with sliding-window rate limiting.
+
+### 🔬 Deep-Dive Technical Points
 - **Engineered a Redis Sorted Set sliding window rate limiter** (`ZADD → ZREMRANGEBYSCORE → ZCOUNT`) preventing burst attacks with per-agent per-minute throttling and exact `Retry-After` headers
 - **Built a 3-layer LLM routing system** — keyword heuristics → local Ollama LLM fallback — zero cloud API cost for routing decisions
 - **Implemented multimodal vision pipeline** using Groq Qwen Vision with OpenAI-compatible base64 `image_url` payload and ThoughtBox reasoning UI
@@ -433,3 +447,4 @@ cd backend/services/chat    && npm run dev    # :8004
 - **Designed mobile-responsive artifact drawer** with full-width mobile layout, backdrop blur overlay, and touch-friendly scrollable agent toolbar
 - **Engineered a Docker-orchestrated microservices ecosystem** — Redis session store + Qdrant vector search, orchestrated via Docker Compose
 - **Built End-to-End RAG Benchmark Suite** reaching 100% answer correctness, 4.91/5 faithfulness, and 0% hallucination on DEV split (48 QA pairs, 8 categories)
+
