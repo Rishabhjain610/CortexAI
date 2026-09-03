@@ -80,6 +80,8 @@ export const pdfRagAgent = async (state) => {
 
       // Garbage page markers (less than 30 chars) filter out kar rahe hain taaki high quality context embed ho
       const docs = allDocs.filter((d) => d.pageContent.trim().length > 30);
+
+
       collectionName = `pdf-${Date.now()}`;
       const store = await vectorStore(
         docs.length > 0 ? docs : allDocs,

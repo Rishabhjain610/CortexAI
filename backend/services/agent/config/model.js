@@ -1,5 +1,5 @@
 import { ChatGroq } from "@langchain/groq";
-import { ChatOllama } from "@langchain/ollama";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenRouter } from "@langchain/openrouter";
 import dotenv from "dotenv";
 
@@ -32,11 +32,9 @@ export const groqVision = new ChatGroq({
 // numPredict: 4096 — Maximum output tokens limit set kiya hai taaki response truncate na ho.
 // numCtx: 16384 — Context window size, badi history aur long conversations ke liye enough hai.
 // chatAgent aur pdfRagAgent dono ke liye use hota hai — low-latency local inference.
-export const ollama = new ChatOllama({
-  model: "minimax-m3:cloud",
-  baseUrl: process.env.OLLAMA_BASE_URL || "http://host.docker.internal:11434",
-  numPredict: 4096,
-  numCtx: 16384,
+export const gemini = new ChatGoogleGenerativeAI({
+  model: "gemini-3.6-flash",
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 // OpenRouter DeepSeek — Coding agent ke liye specialized model.
@@ -54,7 +52,7 @@ export const deepseek = new ChatOpenRouter({
 export const getModel = (agent) => {
   switch (agent) {
     case "chatAgent":
-      return ollama; // Chat — Ollama Minimax (local, no API limits)
+      return gemini; // Chat — Gemini model
     case "codingAgent":
       return deepseek; // Code — OpenRouter DeepSeek V3
     case "pdfAgent":
@@ -68,7 +66,7 @@ export const getModel = (agent) => {
     case "imageAnalyzer":
       return groqVision; // Vision analysis — Groq LLaMA Vision (multimodal)
     case "pdfRagAgent":
-      return ollama; // PDF RAG — Ollama Minimax (local, no API cost for heavy RAG workloads)
+      return gemini; // PDF RAG — Gemini model
     default:
       return groq; // Unknown agent — safe fallback to Groq Qwen
   }
