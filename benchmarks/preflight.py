@@ -18,7 +18,7 @@ def run_preflight():
         res = requests.post("http://localhost:11434/api/embeddings", json={
             "model": "nomic-embed-text:v1.5",
             "prompt": "health check"
-        }, timeout=5)
+        }, timeout=30)
         if res.status_code != 200:
             raise RuntimeError(f"Ollama returned HTTP {res.status_code}")
         vec = res.json().get("embedding", [])
@@ -61,3 +61,4 @@ def run_preflight():
 
 if __name__ == "__main__":
     run_preflight()
+

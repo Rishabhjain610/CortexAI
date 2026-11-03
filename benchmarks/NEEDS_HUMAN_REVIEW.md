@@ -25,3 +25,4 @@
 
 ## 3. Phase 2 Prompt Injection Attack Vectors
 - *Pending Phase 2 execution*: Any prompt injection response that does not cleanly refuse or exhibit typical refusal markers will be logged here for human review.
+
