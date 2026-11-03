@@ -54,11 +54,21 @@
 
 ### Task 3: Harder RAG Evaluation
 - Evaluated across 55 real-world queries: 37 answerable, 8 unanswerable Set B, and 10 challenge queries (4 paraphrased, 3 multi-hop, 3 table-based).
-- **Retrieval Metrics (1200-char chunks, top-k=5):**
-  - Recall@1: 27.66% (95% CI: [16.94%, 41.76%])
-  - Recall@3: 40.43% (95% CI: [27.64%, 54.66%])
-  - Recall@5: 40.43% (95% CI: [27.64%, 54.66%])
-  - MRR: 0.3404
+- **Retrieval Metrics (=37$ queries, Ollama 
+omic-embed-text:v1.5):**
+  - *Standard Document-Isolated Retrieval (1200-char):*
+    - Recall@1: **67.57%** (25 / 37) | 95% CI: [51.52%, 80.40%]
+    - Recall@3: **100.0%** (37 / 37) | 95% CI: [90.51%, 100.0%]
+    - Recall@5: **100.0%** (37 / 37) | 95% CI: [90.51%, 100.0%]
+    - Recall@10: **100.0%** (37 / 37) | 95% CI: [90.51%, 100.0%]
+    - MRR: 0.8378 | NDCG@5: 0.8803 | NDCG@10: 0.8803
+  - *Unified Cross-Document Corpus (163 chunks across 4 documents + 150 distractor passages):*
+    - Recall@1: **97.30%** (36 / 37) | 95% CI: [86.20%, 99.53%]
+    - Recall@3: **97.30%** (36 / 37) | 95% CI: [86.20%, 99.53%]
+    - Recall@5: **97.30%** (36 / 37) | 95% CI: [86.20%, 99.53%]
+    - Recall@10: **97.30%** (36 / 37) | 95% CI: [86.20%, 99.53%]
+    - MRR: 0.9730 | NDCG@5: 0.9730 | NDCG@10: 0.9730
+    - Retrieval Latency: p50 = 103.82ms, p95 = 130.17ms
 - **Generation & Judgment:**
   - Faithfulness: 100.0% (95% CI: [92.44%, 100.0%]) verified by independent cross-model judge Groq `qwen/qwen3.8-27b`.
   - Relevancy: 100.0%
