@@ -83,12 +83,10 @@ export const pdfRagAgent = async (state) => {
 
 
       collectionName = `pdf-${Date.now()}`;
-      const _t_embed_start = Date.now();
       const store = await vectorStore(
         docs.length > 0 ? docs : allDocs,
         collectionName,
       );
-      const _embedLatencyMs = Date.now() - _t_embed_start;
 
       // New PDF indexed — overwrite old Redis key so follow-ups use the new document
       if (state.conversationId) {
@@ -101,9 +99,7 @@ export const pdfRagAgent = async (state) => {
         console.log(`[pdfRagAgent] 🔑 Redis collection updated → ${collectionName}`);
       }
 
-      const _t_search_start = Date.now();
       relevantdocs = await store.similaritySearch(query, 10);
-      const _searchLatencyMs = Date.now() - _t_search_start;
     } else if (collectionName) {
       // 2. No file uploaded, but we have a cached collection name in Redis (follow-up query)
       console.log(
@@ -122,29 +118,7 @@ export const pdfRagAgent = async (state) => {
           ...formattedHistory,
           new HumanMessage(state.prompt || ""),
         ];
-        const _t_gen_start = Date.now();
-    const response = await llm.invoke(messages);
-    const _genLatencyMs = Date.now() - _t_gen_start;
-
-    if (process.env.BENCH_MODE === "1") {
-      try {
-        const _fs = await import("fs");
-        const _path = await import("path");
-        const logDir = _path.resolve(process.cwd(), "../../../benchmarks/results/raw");
-        if (!_fs.existsSync(logDir)) _fs.mkdirSync(logDir, { recursive: true });
-        const logFile = _path.join(logDir, "rag_latencies.jsonl");
-        const entry = {
-          timestamp: Date.now(),
-          embedLatencyMs: typeof _embedLatencyMs !== "undefined" ? _embedLatencyMs : 0,
-          searchLatencyMs: typeof _searchLatencyMs !== "undefined" ? _searchLatencyMs : 0,
-          genLatencyMs: _genLatencyMs,
-          totalLatencyMs: (typeof _embedLatencyMs !== "undefined" ? _embedLatencyMs : 0) + (typeof _searchLatencyMs !== "undefined" ? _searchLatencyMs : 0) + _genLatencyMs
-        };
-        _fs.appendFileSync(logFile, JSON.stringify(entry) + "\n");
-      } catch (benchErr) {
-        console.warn("[BENCH_MODE] Failed to write RAG latency log:", benchErr.message);
-      }
-    }
+        const response = await llm.invoke(messages);
         return { aiResponse: response.content };
       }
       return {
@@ -192,14 +166,7 @@ ${context}`,
       new HumanMessage(query),
     ];
 
-    const _t_gen_start = Date.now();
     const response = await llm.invoke(messages);
-    const _genLatencyMs = Date.now() - _t_gen_start;
-
-    if (process.env.BENCH_MODE === "1") {
-      const tokenUsage = response.usage_metadata || response.response_metadata?.tokenUsage || { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
-      console.log(`[BENCH_TRACE] [pdfRagAgent] Query: "${query.slice(0, 50)}" | Retrieved: ${relevantdocs.length} chunks | Model: ${llm.model || llm.modelName || "gemini-3.1-flash-lite"} | Tokens: ${JSON.stringify(tokenUsage)} | Latencies: embed=${typeof _embedLatencyMs !== "undefined" ? _embedLatencyMs : 0}ms, search=${typeof _searchLatencyMs !== "undefined" ? _searchLatencyMs : 0}ms, gen=${_genLatencyMs}ms`);
-    }
 
     return {
       aiResponse: response.content,

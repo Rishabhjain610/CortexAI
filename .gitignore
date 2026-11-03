@@ -10,9 +10,7 @@ node_modules/
 __pycache__/
 *.pyc
 
-# Benchmark local artifacts & caches
-benchmarks/data/documents/
-benchmarks/results/raw/*.tmp
+# Temporary & Scratch
 .venv/
 scratch/
 test_*.py
