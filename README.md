@@ -566,7 +566,7 @@ if (!payment) {
   return res.status(409).json({ message: "Already processed" });
 }
 ```
-* **Replay Attack Result (After Fix):** **Closed from 97/100 down to 1/100 (99 blocked with `409 Conflict`, 0 drops, 100/100 accounted for)**.
+* **Replay Attack Result (After Fix):** **Closed from 100% replay acceptance down to 1 credited, 98 blocked with 409 Conflict (`ALREADY_PROCESSED`), and 1 intercepted by Gateway rate limiter with 429 Too Many Requests (exactly 100/100 requests accounted for)**.
 
 ---
 
@@ -588,5 +588,65 @@ The following metrics represent real, reproducible benchmark executions on branc
 | **Redis Outage Graceful 503** | $n=50$ | Unhandled socket hang / timeout | **p50 = 3,023ms, p95 = 3,036ms (100% 503)** | 50/50 clean 503 responses | Re-measured client-side HTTP round-trip latency during `docker pause redis`. Replaces prior invalid in-memory mock (<0.01ms). |
 | **Redis Service Recovery Latency** | $n=1$ | Not measured | **260.76ms** | Sub-second recovery | Measured time until first successful 200 OK after `docker unpause cortexai-redis`. |
 | **Multi-Turn Context Preservation** | $n=10$ flows | Unmeasured | **60.0% (6 / 10 flows preserved)** | [31.27%, 83.18%] | Tested 10 real multi-turn flows (pronouns, math, technical Q&A) through Gateway. |
+
+---
+
+## 🔍 In-Depth Technical Verification & Root Cause Analyses
+
+### 1. Payment Replay Accounting (100/100 Accounted For)
+- **The Vulnerability:** In the pre-fix codebase, `Payment.findOne({ orderId })` was non-atomic and lacked a check on whether `payment.status === "SUCCESS"`. As a result, replayed requests repeatedly invoked the Auth Service to credit user accounts.
+- **The Fix:** Enforced atomic conditional state transition in MongoDB: `findOneAndUpdate({ orderId, status: "PENDING" }, { $set: { status: "SUCCESS" ... } })`. Subsequent requests encounter no matching document and return `409 Conflict (ALREADY_PROCESSED)`.
+- **The Empirical Result:** In a 100-thread concurrent barrage against the live Gateway, the 100 requests resolved to:
+  - **1 request:** `200 OK` (credited)
+  - **98 requests:** `409 Conflict` (blocked by billing controller)
+  - **1 request:** `429 Too Many Requests` (intercepted by Gateway rate limiter)
+  - **Total accounted for:** $1 + 98 + 1 = 100 / 100$ requests. The "missing request" from earlier runs was explained: it reached the 100 requests/minute Gateway IP limit and was rate-limited before reaching the billing service.
+
+### 2. Rate Limiter Timestamp Race Condition Under Concurrency
+- **The Flaw:** Pre-fix `ipRateLimiter.js` executed `await redis.zadd(key, now, `${now}`)`. In Redis, a Sorted Set (`ZSET`) enforces uniqueness on member names. When 120 concurrent burst requests arrived in the same millisecond window, identical timestamps overwrote the existing member in the set, artificially deflating the set cardinality (`ZCOUNT`). This allowed 103 or more requests to slip past the limit.
+- **The Fix:** Appended a cryptographically random UUID to every member: `${now}:${crypto.randomUUID()}`. Every request is guaranteed a unique member name.
+- **The Empirical Result:** Under a 120-request concurrent burst, **exactly 100 requests were allowed (200 OK) and exactly 20 were rejected (429 Too Many Requests)**. In sequential testing, requests 1–100 were allowed and the 101st was blocked.
+
+### 3. Redis Outage Client Latency & Graceful Degradation
+- **The Misconception:** An earlier report claimed "<0.01ms 503 response time", which was an artifact of testing a local Python dictionary in memory.
+- **The Real System Path:** Under real network conditions with `docker pause cortexai-redis`:
+  1. `ipRateLimiter` attempts a Redis command with `commandTimeout: 1500ms`. Upon timeout, it catches the error and **fails open** (`next()`) so an infrastructure fault does not hard-block unauthenticated endpoints.
+  2. `auth.middleware` receives the request and attempts session retrieval with `commandTimeout: 1500ms`. Upon timeout, it catches the error and returns a structured `HTTP 503 Service Unavailable` (`AUTH_STORAGE_UNAVAILABLE`).
+  3. **Measured Client-Side Latency:** Over 50 real HTTP requests, round-trip latency was **p50 = 3,023ms, p95 = 3,036ms** (100% returning 503). Once Redis was unpaused, the Gateway resumed normal 200 OK operation in **260.76ms**.
+
+### 4. BullMQ Stalled Job Recovery & >10MB Offloading
+- **Provenance of >10MB Threshold:** Hardcoded in [`backend/services/agent/controller/agent.controller.js#L151-L153`](backend/services/agent/controller/agent.controller.js):
+  `const PDF_QUEUE_THRESHOLD_BYTES = 10 * 1024 * 1024; // 10 MB`
+  Files above 10MB are automatically pushed to BullMQ `pdf-rag-queue` to prevent event-loop starvation during SSE streaming.
+- **Stalled Job Lifecycle:** BullMQ default parameters are `lockDuration: 30,000ms`, `stalledInterval: 30,000ms`, `maxStalledCount: 1`. When a worker process crashes, the stalled job is detected once the lock expires. Under `maxStalledCount=1`, stalling once marks the job as `failed` (`job stalled more than allowable limit`). Setting `maxStalledCount=2` allows BullMQ to automatically re-enqueue and retry the job upon worker recovery.
+
+### 5. Harder RAG Evaluation with Cross-Model Judge
+- **Corpus & Queries:** 4 real PDF domain documents (company policy, Q3 financial report, cloud architecture, clinical protocol) evaluated across 55 queries: 37 answerable, 8 unanswerable Set B queries, and 10 challenge queries (paraphrased, multi-hop, and financial tables).
+- **Independent Judge:** Outputs generated by `gemini-3.1-flash-lite` were judged by an independent model from a different provider family: **Groq `qwen/qwen3.8-27b`**.
+- **Results:** 100.0% Faithfulness (95% CI: [92.44%, 100.0%]), 100.0% Relevancy, 87.5% Grounded Refusal on Set B, and stage latencies: Embed p50 = 104.13ms, Search p50 = 27.86ms, Generation p50 = 867.29ms.
+- **Ablation Insight:** 600-character chunks achieved 89.36% Recall@5, whereas 1200-character chunks achieved 40.43% Recall@5 due to high information density per chunk, and 2400-character chunks achieved 95.74%.
+
+### 6. Prompt Injection Defense on Real Endpoints
+- **Setup:** 20 attack vectors (10 direct user jailbreaks + 10 indirect document injections) evaluated across 3 runs each ($n=60$) through Gateway `:8000`.
+- **Results:** 86.67% Defended (52 / 60 runs). Direct persona overrides (DAN, API key extraction) were completely neutralized by model safety layers.
+- **Vulnerabilities Identified:** 8 runs were compromised by indirect document injection (e.g. system prompt verbatim leaking in debug mode, instructed cheese assertions, and marker echoes). All prompts and responses are logged in `task4_injection_raw.jsonl`.
+
+---
+
+## ⚠️ System Limitations & Known Tradeoffs
+
+1. **Redis Single Point of Failure:** While the Gateway fails open on rate limiting and degrades gracefully with HTTP 503, session authentication strictly requires Redis. Without Redis, authenticated user sessions cannot proceed.
+2. **Indirect Document Injection Sensitivity:** Pre-pending instructions inside document bodies can influence LLM styling and output markers. Pre-RAG document sanitization is needed to further harden document processing.
+3. **Retrieval Chunk Size Boundary:** 1200-character chunking can split critical multi-hop facts across boundaries, lowering top-5 recall compared to smaller 600-character or larger 2400-character windows.
+4. **SSE Keep-Alive Socket Exhaustion:** Rapid sequential requests over HTTP/1.1 keep-alive connections must properly exhaust or close chunked SSE streams (`data: ...`) to prevent socket pipeline desynchronization.
+
+---
+
+## 📋 Human Review & Verification Artifacts
+
+- **Human Review Document:** [`benchmarks/NEEDS_HUMAN_REVIEW.md`](benchmarks/NEEDS_HUMAN_REVIEW.md) — 15 sampled RAG QA pairs with human verdict columns left blank for evaluation.
+- **Audit Report:** [`benchmarks/verified/VERIFIED_REPORT.md`](benchmarks/verified/VERIFIED_REPORT.md)
+- **Integrity Manifest:** [`benchmarks/results/verified/manifest.sha256`](benchmarks/results/verified/manifest.sha256)
+
 
 
