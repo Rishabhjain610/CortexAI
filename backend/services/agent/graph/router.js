@@ -2,9 +2,17 @@
 // Layer 1: Manual agent selection (user ne UI se select kiya)
 // Layer 2: Deterministic keyword heuristics (fast, no LLM call)
 // Layer 3: LLM fallback (Ollama Minimax, local, no API rate limits)
+
+const routeReturn = (targetAgent, layer, meta = {}) => {
+  if (process.env.BENCH_MODE === "1") {
+    console.log(`[BENCH_TRACE] [router] Layer: ${layer} | Result: ${targetAgent} | Meta: ${JSON.stringify(meta)}`);
+  }
+  return { agent: targetAgent };
+};
+
 export const router = async (state) => {
   console.log("--- ROUTER NODE ---");
-  const { prompt, agent, file, conversationId } = state;
+  const { prompt, agent, file, conversationId, history = [] } = state;
 
   // --- LAYER 1: Manual Selection ---
   // Agar user ne UI panel me pehle se koi agent manually select kar rakha hai toh seedha use route karo.
@@ -13,10 +21,10 @@ export const router = async (state) => {
   if (agent && agent !== "auto") {
     if ((agent === "pdfAgent" || agent === "pdfRagAgent") && file) {
       console.log(`Routed manual PDF request with attached file to: pdfRagAgent`);
-      return { agent: "pdfRagAgent" };
+      return routeReturn("pdfRagAgent", "Layer 1/1.5", { reason: "file/manual" });
     }
     console.log(`Routed directly to manually selected agent: ${agent}`);
-    return { agent };
+    return routeReturn(agent, "Layer 1", { reason: "manual" });
   }
 
   // --- LAYER 1.5: File-based Routing ---
@@ -29,7 +37,7 @@ export const router = async (state) => {
     // PDF file detect hone par RAG pipeline trigger karo
     if (ext.endsWith(".pdf") || mime === "application/pdf") {
       console.log(`Routed by File Type (.pdf) to: pdfRagAgent`);
-      return { agent: "pdfRagAgent" };
+      return routeReturn("pdfRagAgent", "Layer 1/1.5", { reason: "file/manual" });
     }
 
     // Image file detect hone par vision analyzer trigger karo
@@ -44,7 +52,7 @@ export const router = async (state) => {
       ext.endsWith(".svg")
     ) {
       console.log(`Routed by File Type (image) to: imageAnalyzer`);
-      return { agent: "imageAnalyzer" };
+      return routeReturn("imageAnalyzer", "Layer 1.5", { reason: "image-file" });
     }
   }
 
@@ -72,7 +80,7 @@ export const router = async (state) => {
   ];
   if (imageKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: imageAgent`);
-    return { agent: "imageAgent" };
+    return routeReturn("imageAgent", "Layer 2", { reason: "image-keyword" });
   }
 
   // 2. Explicit web search keywords
@@ -84,7 +92,7 @@ export const router = async (state) => {
   const hasExplicitSearchIntent = explicitSearchKeywords.some(matchKeyword);
   if (hasExplicitSearchIntent) {
     console.log(`Routed by Keyword Heuristic to: searchAgent`);
-    return { agent: "searchAgent" };
+    return routeReturn("searchAgent", "Layer 2", { reason: "search-keyword" });
   }
 
   // 3. Code/Programming keywords
@@ -94,14 +102,14 @@ export const router = async (state) => {
   ];
   if (codingKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: codingAgent`);
-    return { agent: "codingAgent" };
+    return routeReturn("codingAgent", "Layer 2", { reason: "coding-keyword" });
   }
 
   // 4. PPT/Presentation keywords
   const pptKeywords = ["ppt", "pptx", "presentation", "presentations", "presntation", "presenation", "presentaton", "slide", "slides", "powerpoint", "deck", "slideshow"];
   if (pptKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: pptAgent`);
-    return { agent: "pptAgent" };
+    return routeReturn("pptAgent", "Layer 2", { reason: "ppt-keyword" });
   }
 
   // --- LAYER 1.8: Active PDF Session Check ---
@@ -113,7 +121,7 @@ export const router = async (state) => {
       const activeCollection = await redis.get(`pdf:collection:${conversationId}`);
       if (activeCollection) {
         console.log(`Routed to pdfRagAgent due to active PDF collection in Redis: ${activeCollection}`);
-        return { agent: "pdfRagAgent" };
+        return routeReturn("pdfRagAgent", "Layer 1/1.5", { reason: "file/manual" });
       }
     } catch (redisErr) {
       console.error("Failed to check active PDF session in router:", redisErr.message);
@@ -124,7 +132,7 @@ export const router = async (state) => {
   const isMathQuery = /^[\d\s\+\-\*\/\(\)\.]{3,}$/.test(cleanPrompt) || /^\d+\s*[\+\-\*\/]\s*\d+$/.test(cleanPrompt) || /^\s*(tell|what|calculate|compute)?\s*(me)?\s*\d+\s*[\+\-\*\/]\s*\d+\s*$/i.test(cleanPrompt);
   if (isMathQuery) {
     console.log(`Routed by Math Heuristic to: chatAgent`);
-    return { agent: "chatAgent" };
+    return routeReturn("chatAgent", "Layer 2/Fallback", { reason: "chat-keyword" });
   }
 
   // --- LAYER 2: Deterministic Keyword Heuristics ---
@@ -144,7 +152,7 @@ export const router = async (state) => {
 
   if (!hasDocKeyword && searchKeywords.some(matchKeyword)) {
     console.log(`Routed by Keyword Heuristic to: searchAgent`);
-    return { agent: "searchAgent" };
+    return routeReturn("searchAgent", "Layer 2", { reason: "search-keyword" });
   }
 
 
@@ -155,10 +163,10 @@ export const router = async (state) => {
   if (pdfKeywords.some(matchKeyword)) {
     if (topicIndicators.some(matchKeyword)) {
       console.log(`Routed by Keyword Heuristic (topic-pdf) to: searchAgent`);
-      return { agent: "searchAgent" };
+      return routeReturn("searchAgent", "Layer 2", { reason: "search-keyword" });
     }
     console.log(`Routed by Keyword Heuristic to: pdfAgent`);
-    return { agent: "pdfAgent" };
+    return routeReturn("pdfAgent", "Layer 2", { reason: "pdf-keyword" });
   }
 
   // --- LAYER 3: LLM Fallback (Ollama Minimax, local) ---
@@ -219,10 +227,10 @@ Reply with ONLY the agent name (e.g. chatAgent). No explanation.`;
     const targetAgent = validAgents.includes(classification) ? classification : (hasActivePdf ? "pdfRagAgent" : "chatAgent");
 
     console.log(`Routed by Minimax LLM to: ${targetAgent}`);
-    return { agent: targetAgent };
+    return routeReturn(targetAgent, "Layer 3: LLM", { reason: "llm-classified" });
   } catch (err) {
     // Agar Ollama server down ho ya LLM call fail ho toh bhi crash mat karo — chatAgent pe default karo
     console.error("LLM router fallback failed, defaulting to chatAgent:", err.message);
-    return { agent: "chatAgent" };
+    return routeReturn("chatAgent", "Layer 2/Fallback", { reason: "chat-keyword" });
   }
 };

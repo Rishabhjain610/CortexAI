@@ -30,8 +30,11 @@ export const requireAuth = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    // Graceful error isolation: Agar Redis broker offline hai toh raw 500 crash ke bajaye structured 503 de rahe hain
+    return res.status(503).json({
+      message: "Authentication service temporarily unavailable. Storage backend offline.",
+      code: "AUTH_STORAGE_UNAVAILABLE",
+      error: error.message,
+    });
   }
 };

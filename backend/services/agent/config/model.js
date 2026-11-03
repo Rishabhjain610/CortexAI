@@ -2,6 +2,7 @@ import { ChatGroq } from "@langchain/groq";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenRouter } from "@langchain/openrouter";
 import dotenv from "dotenv";
+import { getStubModel } from "./stubModel.js";
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ dotenv.config();
 // Yeh ek "thinking" model hai jo <think>...</think> tags output karta hai, isliye frontend ThoughtBox render kar sakta hai.
 export const groq = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
-  model: "qwen/qwen3.6-27b",
+  model: "qwen/qwen3.8-27b",
 });
 
 // Groq LLaMA 70B — Structured JSON output ke liye use hota hai (PDF/PPT agents).
@@ -17,7 +18,7 @@ export const groq = new ChatGroq({
 // Qwen nahi, kyunki LLaMA 70B ka JSON formatting zyada consistent hota hai non-thinking mode me.
 export const groqStructured = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3.3-70b-versatile",
+  model: "openai/gpt-oss-120b",
   temperature: 0,
 });
 
@@ -33,8 +34,9 @@ export const groqVision = new ChatGroq({
 // numCtx: 16384 — Context window size, badi history aur long conversations ke liye enough hai.
 // chatAgent aur pdfRagAgent dono ke liye use hota hai — low-latency local inference.
 export const gemini = new ChatGoogleGenerativeAI({
-  model: "gemini-3.6-flash",
-  apiKey: process.env.GEMINI_API_KEY,
+  model: process.env.GEMINI_MODEL || "gemini-3.1-flash-lite",
+  apiKey: process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_FALLBACK,
+  maxRetries: 3,
 });
 
 // OpenRouter DeepSeek — Coding agent ke liye specialized model.
@@ -50,6 +52,9 @@ export const deepseek = new ChatOpenRouter({
 // getModel — Agent name se sahi LLM instance return karne wala dispatcher function.
 // Default fallback: Agar koi unknown agent name aaye toh groq (Qwen) return karo — safe fallback.
 export const getModel = (agent) => {
+  if (process.env.BENCH_MODE === "1" && process.env.LLM_STUB_MODE === "1") {
+    return getStubModel(agent);
+  }
   switch (agent) {
     case "chatAgent":
       return gemini; // Chat — Gemini model

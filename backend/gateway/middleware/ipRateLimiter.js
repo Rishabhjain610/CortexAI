@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import redis from "../../shared/redis/redis.js";
 
 // ===================================================================================
@@ -40,7 +41,9 @@ export const ipRateLimiter = async (req, res, next) => {
     const key = `ratelimit:ip:${clientIp}`;
 
     // Step 1: Current request timestamp sorted set me insert karo
-    await redis.zadd(key, now, `${now}`);
+    // Har member ko unique UUID de rahe hain taaki same millisecond me parallel requests overwrite na hon
+    const member = `${now}:${crypto.randomUUID()}`;
+    await redis.zadd(key, now, member);
 
     // Step 2: 60 seconds se purani request entries delete karo
     await redis.zremrangebyscore(key, "-inf", windowStart);
@@ -52,6 +55,9 @@ export const ipRateLimiter = async (req, res, next) => {
     await redis.expire(key, Math.ceil(WINDOW_MS / 1000));
 
     // Step 5: Limit check — count > limit hone par 429 Too Many Requests response bhejo
+        if (process.env.BENCH_MODE === "1") {
+      console.log(`[BENCH_TRACE] [ipRateLimiter] IP: ${clientIp} | Count: ${count} / ${DEFAULT_LIMIT} | Allowed: ${count <= DEFAULT_LIMIT}`);
+    }
     if (count > DEFAULT_LIMIT) {
       const oldestEntry = await redis.zrange(key, 0, 0, "WITHSCORES");
       const oldestTimestamp = oldestEntry?.[1] ? parseInt(oldestEntry[1], 10) : now;

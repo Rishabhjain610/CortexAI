@@ -572,20 +572,21 @@ if (!payment) {
 
 ## 📊 Verified Production Benchmark Scorecard (Real Models & Zero Stubs)
 
-The following metrics represent real, reproducible benchmark executions on branch `bench-verified`. Evaluated with **local Ollama `nomic-embed-text:v1.5` (768-dim)** embeddings, **Qdrant vector collection (`cortexai_verified_nomic_v15`)**, **real Google Gemini models (`gemini-3.6-flash` / `gemini-3.1-flash-lite`)**, and multi-threaded system harnesses with cryptographic checksum verification (`manifest.sha256`):
+The following metrics represent real, reproducible benchmark executions on branch `bench-verified`. Evaluated with **local Ollama `nomic-embed-text:v1.5` (768-dim)** embeddings, **Qdrant vector collection**, **real Google Gemini Flash (`gemini-3.1-flash-lite`)**, an independent cross-model judge (**Groq `qwen/qwen3.8-27b`**), and end-to-end HTTP tests routed through API Gateway `:8000`. Raw per-request logs are preserved in `benchmarks/results/verified/raw/` with checksum verification in `manifest.sha256`:
 
-| Evaluation Dimension | Baseline (Before Fix / Stubs) | Verified Value (Real Models) | Verification Status & Engineering Impact | Cryptographic Proof Artifact |
-|:---|:---|:---|:---|:---|
-| **RAG Retrieval Recall** | *Invalid (hash stub on :9000)* | **100.0% Recall@1 / Recall@3 / Recall@5** (16/16) | Measured with Ollama `nomic-embed-text:v1.5` & Qdrant; MRR = 1.0000 | `rag_quality_raw.json` (`sha256: 19d72b...`) |
-| **RAG Generation & Faithfulness** | *Invalid (LLM stub mode)* | **100.0% Factual Correctness, 5.0/5 Faithfulness** | Zero speculation; answers strictly grounded in retrieved PDF context | `rag_quality_raw.json` (`sha256: 19d72b...`) |
-| **RAG Hallucination Defense** | *Invalid (LLM stub mode)* | **100.0% Refusal Rate, 0.0% Hallucination** (8/8) | Safe grounded refusal on out-of-domain and adversarial queries | `rag_quality_raw.json` (`sha256: 19d72b...`) |
-| **Prompt Injection Resilience** | *Invalid (LLM stub mode)* | **20 / 20 Defended (100.0% Resilience, 0.0% Leak)** | Neutralized DAN personas, exfiltration, delimiter hijack, and Base64 | `prompt_injection_raw.json` (`sha256: 6059df...`) |
-| **Agent Router Accuracy** | 92.5% (with crash) | **93.8% Accuracy (75 / 80 correct)** | 75% resolved by L2 heuristics; 25% resolved by Layer 3 real LLM fallback | `router_accuracy_raw.json` (`sha256: c79a3d...`) |
-| **Router Crash Resilience** | Crashed (`ReferenceError: history`) | **0 Crashes (100% Uptime)** | Initialized `history = []` state parameter in router node | `router_accuracy_raw.json` (`sha256: c79a3d...`) |
-| **Payment Replay Attack** | 97 / 100 replays credited (3 drops) | **1 credited, 99 blocked (`409 Conflict`), 0 drops** | Closed duplicate financial credit vulnerability; 100/100 requests accounted | `system_audits_raw.json` (`sha256: 10c400...`) |
-| **Sliding Window Burst** | 103 / 120 allowed (3 leaked via ms collision) | **100 allowed, 20 blocked (`429 Too Many Requests`)** | Strictly $\le 100$ allowed; eliminated millisecond race via `${now}:${crypto.randomUUID()}` | `system_audits_raw.json` (`sha256: 10c400...`) |
-| **BullMQ Worker Crash Semantics**| 1 lost job (unverified) | **Lock Expiry & Stalled Job Recovery Verified** | Lock retained during `lockDuration`; job recovered to `wait` queue and completed | `system_audits_raw.json` (`sha256: 10c400...`) |
-| **Redis Outage Handling** | Unhandled socket hang / timeout | **Graceful Failure: 503 (<0.01ms mean latency)** | Returns clean HTTP 503 without hanging gateway or exhausting connections | `system_audits_raw.json` (`sha256: 10c400...`) |
-| **Microservice Port Isolation** | Port 8003 open (200 OK bypass) | **Connection Refused / Closed** | Removed host port bindings; microservices communicate only via internal Docker network | Docker Compose Spec |
+| Evaluation Dimension | Sample Size ($n$) | Baseline (Pre-Fix) | Verified Value (Post-Fix) | 95% Confidence Interval (Wilson) | Verification Details & Engineering Impact |
+|:---|:---:|:---:|:---:|:---:|:---|
+| **Payment Verification Replay** | $n=100$ | 100/100 credited (replays rewarded) | **1 credited, 98 blocked (409), 1 rate-limited (429)** | [96.0%, 99.9%] rejection | Closed duplicate credit vulnerability using atomic `findOneAndUpdate({ orderId, status: "PENDING" })`. Exactly 100/100 requests accounted for. |
+| **Sliding Window Rate Limit (120 Burst)** | $n=120$ | 103/120 allowed (leaked via ms collision) | **100 allowed (200), 20 blocked (429)** | Exactly 100/120 cap enforced | Fixed timestamp collision race by appending unique UUIDs (`${now}:${crypto.randomUUID()}`) to Redis sorted set members. |
+| **Sequential Rate Limit (100 + 1st)** | $n=101$ | Untracked sequential | **100 allowed (200), 101st blocked (429)** | 100% boundary compliance | Verified exact sliding window ceiling under sequential load. |
+| **Microservice Port Isolation** | $n=4$ | 4/4 ports exposed to `0.0.0.0` | **4/4 ports closed to host (timed out)** | Closed host network | Removed external port bindings (8001–8004); downstream microservices accessible only via internal Docker network. |
+| **Router Crash Resilience** | $n=1$ | Threw `ReferenceError: history` | **Safe default `{ agent: 'chatAgent' }`** | 0 unhandled exceptions | Destructured `{ history = [] }` safely in StateGraph router, preventing unhandled Node process exceptions. |
+| **RAG Retrieval Recall@5** | $n=47$ | *Invalid (hash stub on :9000)* | **40.43% (1200-char chunks)** | [27.64%, 54.66%] | Evaluated across 4 real domain PDFs using Ollama `nomic-embed-text:v1.5` and Qdrant. (600-char chunks yield 89.36% recall). |
+| **RAG Faithfulness (Cross-Model Judge)** | $n=47$ | *Invalid (stub LLM)* | **100.0% Grounded Faithfulness** | [92.44%, 100.0%] | Independently verified by Groq `qwen/qwen3.8-27b`; zero factual claims contradicted source context. |
+| **RAG Unanswerable Refusal (Set B)** | $n=8$ | *Invalid (stub LLM)* | **87.5% Grounded Refusal (7 / 8)** | [52.91%, 97.76%] | Refused out-of-domain / unanswerable queries without inventing facts. |
+| **Prompt Injection Defense** | $n=60$ | *Invalid (stub LLM)* | **86.67% Defended (52 / 60), 8 compromised** | [75.92%, 93.13%] defense | Tested 20 vectors across 3 runs through Gateway. Neutralized direct jailbreaks; identified 8 indirect document injection vulnerabilities. |
+| **Redis Outage Graceful 503** | $n=50$ | Unhandled socket hang / timeout | **p50 = 3,023ms, p95 = 3,036ms (100% 503)** | 50/50 clean 503 responses | Re-measured client-side HTTP round-trip latency during `docker pause redis`. Replaces prior invalid in-memory mock (<0.01ms). |
+| **Redis Service Recovery Latency** | $n=1$ | Not measured | **260.76ms** | Sub-second recovery | Measured time until first successful 200 OK after `docker unpause cortexai-redis`. |
+| **Multi-Turn Context Preservation** | $n=10$ flows | Unmeasured | **60.0% (6 / 10 flows preserved)** | [31.27%, 83.18%] | Tested 10 real multi-turn flows (pronouns, math, technical Q&A) through Gateway. |
 
 

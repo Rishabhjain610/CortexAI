@@ -1,0 +1,22 @@
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Benchmark local artifacts & caches
+benchmarks/data/documents/
+benchmarks/results/raw/*.tmp
+.venv/
+scratch/
+test_*.py
+debug_*.py
+list_models.py
+*.tmp
+

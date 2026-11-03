@@ -11,6 +11,9 @@ export const agent = async (req, res) => {
     const { prompt, conversationId, model, agent: selectedAgent } = req.body;
     const file = req.file; // Multer middleware se parsed uploaded file (agar koi file attach hui ho)
     console.log("req.body received in agent controller:", req.body);
+    if (process.env.BENCH_MODE === "1") {
+      console.log(`[BENCH_TRACE] [agentController] User: ${req.headers["x-user-id"] || "anon"} | Target: ${selectedAgent || "auto"} | Prompt: "${(req.body.prompt || "").slice(0, 50)}"`);
+    }
 
     // x-user-id header Gateway ke proxyWithHeader utility ne inject kiya hota hai authenticated sessions ke liye
     const userId = req.headers["x-user-id"];

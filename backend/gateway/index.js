@@ -50,6 +50,11 @@ const PORT = process.env.PORT || 8000;
 // 3. /api/auth me parseReqBody: false explicitly set kiya gaya hai kyunki yeh raw proxy() call use karta hai (non-authenticated public routes jaise /login).
 // 4. /api/chat, /api/agent, aur /api/billing me proxyWithHeader utility use hoti hai, jisme parseReqBody: false aur 50mb limit already built-in defined hai.
 app.use("/api/auth", proxy(AUTH_SERVICE_URL, { parseReqBody: false }));
+// Public webhook endpoint: Razorpay server-to-server callbacks authenticate via HMAC signature, not session cookies
+app.use("/api/billing/webhook", proxy(BILLING_SERVICE_URL, {
+  parseReqBody: false,
+  proxyReqPathResolver: (req) => "/webhook"
+}));
 app.use("/api/chat", requireAuth, proxyWithHeader(CHAT_SERVICE_URL));
 app.use("/api/agent", requireAuth, proxyWithHeader(AGENT_SERVICE_URL));
 app.use("/api/billing", requireAuth, proxyWithHeader(BILLING_SERVICE_URL));

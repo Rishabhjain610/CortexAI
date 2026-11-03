@@ -74,16 +74,29 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    // Pending transaction entry database me search kiya
-    const payment = await Payment.findOne({ orderId: razorpay_order_id });
+    // Atomic state transition: Only update if status is currently PENDING
+    // This guarantees idempotency under concurrent or replayed payment verification requests
+    const payment = await Payment.findOneAndUpdate(
+      { orderId: razorpay_order_id, status: "PENDING" },
+      { $set: { status: "SUCCESS", transactionId: razorpay_payment_id } },
+      { new: true }
+    );
+
     if (!payment) {
+      // Check if order was already successfully processed
+      const existing = await Payment.findOne({ orderId: razorpay_order_id });
+      if (existing && existing.status === "SUCCESS") {
+        if (process.env.BENCH_MODE === "1") {
+        console.log(`[BENCH_TRACE] [billingVerify] Order: ${razorpay_order_id} | Status: 409_ALREADY_PROCESSED`);
+      }
+      return res.status(409).json({
+          message: "Payment has already been processed and credited",
+          orderId: razorpay_order_id,
+          status: "ALREADY_PROCESSED"
+        });
+      }
       return res.status(404).json({ message: "Payment order details not found" });
     }
-
-    // Payment clear hone par database update karke success flag mark kiya
-    payment.status = "SUCCESS";
-    payment.transactionId = razorpay_payment_id;
-    await payment.save();
 
     // Auth service call karke user ka updated plan aur credit balance database aur Redis memory me sync kiya
     const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
@@ -102,11 +115,77 @@ export const verifyPayment = async (req, res) => {
       );
     }
 
+    if (process.env.BENCH_MODE === "1") {
+      console.log(`[BENCH_TRACE] [billingVerify] Order: ${razorpay_order_id} | Status: 200_SUCCESS_CREDITED`);
+    }
     return res.status(200).json({ message: "Payment verification success", payment });
   } catch (error) {
     console.error("Payment verification failed:", error);
     return res
       .status(500)
       .json({ message: "Something went wrong during verification", error: error.message });
+  }
+};
+
+export const handleWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET;
+    const signature = req.headers["x-razorpay-signature"];
+
+    if (!webhookSecret || !signature) {
+      return res.status(400).json({ message: "Missing webhook secret or signature" });
+    }
+
+    // Verify webhook HMAC signature
+    const rawPayload = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    const expectedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(rawPayload)
+      .digest("hex");
+
+    if (expectedSignature !== signature) {
+      return res.status(400).json({ message: "Invalid webhook signature" });
+    }
+
+    const event = req.body.event;
+    console.log(`[Billing Webhook] Received valid event: ${event}`);
+
+    if (event === "payment.captured" || event === "order.paid") {
+      const paymentEntity = req.body.payload?.payment?.entity || {};
+      const orderId = paymentEntity.order_id || req.body.payload?.order?.entity?.id;
+      const paymentId = paymentEntity.id;
+
+      if (!orderId) {
+        return res.status(400).json({ message: "Missing order ID in webhook payload" });
+      }
+
+      // Idempotent atomic update
+      const payment = await Payment.findOneAndUpdate(
+        { orderId: orderId, status: "PENDING" },
+        { $set: { status: "SUCCESS", transactionId: paymentId } },
+        { new: true }
+      );
+
+      if (payment) {
+        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+        await axios.post(`${authServiceUrl}/update-payment`, {
+          userId: payment.userId,
+          plan: payment.plan,
+          credits: payment.credits,
+        });
+        console.log(`[Billing Webhook] Processed order ${orderId} and credited user ${payment.userId}`);
+      } else {
+        console.log(`[Billing Webhook] Order ${orderId} already processed or not found. Deduplicated.`);
+      }
+    }
+
+    // Return 200 OK immediately for webhook acknowledgement
+    if (process.env.BENCH_MODE === "1") {
+      console.log(`[BENCH_TRACE] [billingVerify] Order: ${razorpay_order_id} | Status: 200_SUCCESS_CREDITED`);
+    }
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("[Billing Webhook] Processing error:", error);
+    return res.status(500).json({ message: "Webhook handler failed", error: error.message });
   }
 };

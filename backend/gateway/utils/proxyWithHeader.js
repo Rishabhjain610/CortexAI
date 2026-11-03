@@ -17,6 +17,10 @@ const proxyWithHeader = (url) => {
       }
       return proxyReqOpts;
     },
+    proxyErrorHandler: (err, res, next) => {
+      console.error("[proxyWithHeader error]:", err.message, err.code);
+      next(err);
+    },
   });
 };
 
