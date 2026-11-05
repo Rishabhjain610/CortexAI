@@ -18,3 +18,7 @@ debug_*.py
 list_models.py
 *.tmp
 
+
+benchmarks/retrieval_bench/embeddings_cache.json
+benchmarks/**/__pycache__/
+

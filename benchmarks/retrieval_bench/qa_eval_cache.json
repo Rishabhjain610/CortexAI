@@ -1,0 +1,1370 @@
+{
+  "gen:gemini-3.1-flash-lite:Which laboratory was the healthcare review research conducted at?:-4911147127567726324": {
+    "text": "The provided text does not state the name of the laboratory where the research was conducted. It mentions that a prototype was developed and tested in collaboration with the \"Harvard Medical School Teaching Hospital,\" but it does not identify a specific laboratory for the review research itself.",
+    "prompt_tokens": 1734,
+    "candidate_tokens": 51,
+    "total_tokens": 1785,
+    "duration_ms": 6911.32378578186
+  },
+  "judge:openai/gpt-oss-120b:Which laboratory was the healthcare review research conducted at?:-4684162696817385410": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": true,
+    "explanation": "The answer fails to provide the correct laboratory (IoT & wireless communication protocols laboratory, IIUM) and adds an unsupported claim about Harvard, violating both correctness and faithfulness.",
+    "prompt_tokens": 945,
+    "completion_tokens": 299,
+    "total_tokens": 1244,
+    "duration_ms": 977.5640964508057
+  },
+  "gen:gemini-3.1-flash-lite:What award number supported the material in the healthcare review?:4481159249834830708": {
+    "text": "The material in the review is supported by the Air Force Office of Scientific Research under award number FA2386-21-1-4025.",
+    "prompt_tokens": 2078,
+    "candidate_tokens": 34,
+    "total_tokens": 2112,
+    "duration_ms": 61738.046646118164
+  },
+  "judge:openai/gpt-oss-120b:What award number supported the material in the healthcare review?:-8076885769831793497": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the award number FA2386-21-1-4025, matching the ground truth and directly supported by the retrieved context.",
+    "prompt_tokens": 1082,
+    "completion_tokens": 248,
+    "total_tokens": 1330,
+    "duration_ms": 811.6488456726074
+  },
+  "gen:gemini-3.1-flash-lite:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:-3676766455670999999": {
+    "text": "Based on the provided text, when smart contracts are used in conjunction with machine learning and blockchain, the following occurs:\n\n*   **Data Integrity and Provenance:** Blockchain enables an irreversible and highly secure configuration of learning models by maintaining data provenance and history.\n*   **Automated Management:** AI agents can be employed to perform duties such as enforcing laws, improving records, detecting suspicious activity, and making recommendations for upgrading smart contracts over a network.\n*   **Enhanced Security and Scalability:** AI can be used to construct next-generation blockchains that enable the automated development of intelligent contracts, enhance protection against malicious attacks, and facilitate highly scalable operations.\n*   **Data Validation:** Machine learning techniques can detect fake electronic health records (EHRs), ensuring only authentic data is maintained on the blockchain.\n*   **Knowledge Enhancement:** Deep learning can be used to recover and store previously damaged medical records within the blockchain to support tasks such as drug analysis and prediction.",
+    "prompt_tokens": 1448,
+    "candidate_tokens": 195,
+    "total_tokens": 1643,
+    "duration_ms": 1680.6371212005615
+  },
+  "judge:openai/gpt-oss-120b:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:1220551833713821669": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer does not convey the ground\u2011truth claim that results may be trusted and unquestioned and adds unsupported details not found in the provided context.",
+    "prompt_tokens": 1041,
+    "completion_tokens": 272,
+    "total_tokens": 1313,
+    "duration_ms": 1040.433645248413
+  },
+  "gen:gemini-3.1-flash-lite:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:8906028143798144598": {
+    "text": "The PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College, Ghaziabad, is Dr. Rohit Rastogi.",
+    "prompt_tokens": 2119,
+    "candidate_tokens": 27,
+    "total_tokens": 2146,
+    "duration_ms": 1254.4245719909668
+  },
+  "judge:openai/gpt-oss-120b:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:8650925069615456892": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states Dr. Rohit Rastogi as the PI Coordinator, matching the ground truth and supported by the retrieved context.",
+    "prompt_tokens": 1079,
+    "completion_tokens": 177,
+    "total_tokens": 1256,
+    "duration_ms": 620.4066276550293
+  },
+  "gen:gemini-3.1-flash-lite:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:9205491383201462580": {
+    "text": "According to the document, a single enterprising graduate can offer scalable, high-impact services to millions of global enterprises by leveraging Agentic AI solutions.",
+    "prompt_tokens": 1543,
+    "candidate_tokens": 29,
+    "total_tokens": 1572,
+    "duration_ms": 1160.8302593231201
+  },
+  "judge:openai/gpt-oss-120b:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:-9198494300682834796": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer correctly states leveraging Agentic AI solutions, which is directly supported by the context.",
+    "prompt_tokens": 901,
+    "completion_tokens": 287,
+    "total_tokens": 1188,
+    "duration_ms": 978.1193733215332
+  },
+  "gen:gemini-3.1-flash-lite:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-3079724451881061480": {
+    "text": "Based on the provided document, the text does not explicitly identify a specific technological domain as a \"frontier of purpose-driven innovation for assistive technologies.\" \n\nWhile the document discusses various high-impact research areas\u2014such as Artificial Intelligence, Machine Learning, Internet of Things, and Healthcare and Biomedical Applications\u2014it does not use the term \"assistive technologies\" or categorize any domain under that specific label.",
+    "prompt_tokens": 1420,
+    "candidate_tokens": 80,
+    "total_tokens": 1500,
+    "duration_ms": 1089.2395973205566
+  },
+  "judge:openai/gpt-oss-120b:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-8099253102547965564": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer does not give the ground\u2011truth domain (Mobile Robotics), so it is incorrect, though it accurately reflects that the provided context lacks such a claim.",
+    "prompt_tokens": 902,
+    "completion_tokens": 338,
+    "total_tokens": 1240,
+    "duration_ms": 916.9161319732666
+  },
+  "gen:gemini-3.1-flash-lite:What does a graduate assert about how TSEC prepares its students?:6935688472079154914": {
+    "text": "Graduates assert that TSEC prepares its students in the following ways:\n\n*   **Academic and Professional Development:** The curriculum is described as robust, and the faculty is noted for being proactive, knowledgeable, and helpful in guiding students. The department aligns its mission with industry needs, ensuring students are prepared for the evolving competitive environment.\n*   **Skill Enhancement:** Beyond coursework, students are encouraged to improve their communication skills and work effectively toward solutions.\n*   **Practical Experience:** TSEC provides a dynamic platform through technical expos, committee-led events, and associations that allow students to implement knowledge in real-life scenarios.\n*   **Industry Exposure:** The institution facilitates interaction with industrial professionals through quizzes, seminars, webinars, and workshops. Students also gain hands-on experience through internships at prestigious institutions like IIT, BARC-BRIT, and NFC.\n*   **Mentorship and Support:** Faculty provide vital guidance and mentorship, which helps students secure campus placements and cultivate their professional passions.\n*   **Holistic Growth:** The environment fosters confidence and emotional maturity, which graduates note is essential for success in corporate life.",
+    "prompt_tokens": 1615,
+    "candidate_tokens": 229,
+    "total_tokens": 1844,
+    "duration_ms": 1707.7739238739014
+  },
+  "judge:openai/gpt-oss-120b:What does a graduate assert about how TSEC prepares its students?:3754799145096387904": {
+    "correctness": 1,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "Answer conveys the core claim but includes unsupported details not found in the context.",
+    "prompt_tokens": 1152,
+    "completion_tokens": 453,
+    "total_tokens": 1605,
+    "duration_ms": 1316.387414932251
+  },
+  "gen:gemini-3.1-flash-lite:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:8786329009419273493": {
+    "text": "The provided text does not contain information regarding a primary contact person for queries about the blockchain electronic health record survey.",
+    "prompt_tokens": 2007,
+    "candidate_tokens": 22,
+    "total_tokens": 2029,
+    "duration_ms": 1044.9488162994385
+  },
+  "judge:openai/gpt-oss-120b:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:8887610743356784336": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer wrongly refuses despite the question being answerable, though its claim that the context lacks the info is faithful.",
+    "prompt_tokens": 923,
+    "completion_tokens": 256,
+    "total_tokens": 1179,
+    "duration_ms": 975.5218029022217
+  },
+  "gen:gemini-3.1-flash-lite:What international geographic address identifies the location of the wireless communication laboratory?:-3149148482926707835": {
+    "text": "The provided document does not contain information regarding a \"wireless communication laboratory\" or its specific geographic address. Therefore, this information is not available in the document.",
+    "prompt_tokens": 2112,
+    "candidate_tokens": 31,
+    "total_tokens": 2143,
+    "duration_ms": 1289.121389389038
+  },
+  "judge:openai/gpt-oss-120b:What international geographic address identifies the location of the wireless communication laboratory?:-6102206397809365104": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses to provide the known address, making it wrong, though its claim that the document lacks the info is faithful.",
+    "prompt_tokens": 1190,
+    "completion_tokens": 290,
+    "total_tokens": 1480,
+    "duration_ms": 811.5365505218506
+  },
+  "gen:gemini-3.1-flash-lite:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:-7454387959087678747": {
+    "text": "The provided document does not contain information regarding an educational center with AISHE code C-10224 or a project involving the fabrication of automated seed ball generation machinery.",
+    "prompt_tokens": 2233,
+    "candidate_tokens": 35,
+    "total_tokens": 2268,
+    "duration_ms": 982.7299118041992
+  },
+  "judge:openai/gpt-oss-120b:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:-6725448334086179434": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses to provide the known answer despite the question being answerable, though its claim about missing info is faithful to the given context.",
+    "prompt_tokens": 1163,
+    "completion_tokens": 256,
+    "total_tokens": 1419,
+    "duration_ms": 10203.08232307434
+  },
+  "gen:gemini-3.1-flash-lite:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:8479578788351568278": {
+    "text": "Based on the provided document, the higher educational institution in Ghaziabad with the AISHE code C-46112 is **ABES Engineering College**.",
+    "prompt_tokens": 2154,
+    "candidate_tokens": 33,
+    "total_tokens": 2187,
+    "duration_ms": 973.4148979187012
+  },
+  "judge:openai/gpt-oss-120b:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:-6543087870362486314": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies ABES Engineering College, matching the ground truth and supported by the retrieved context.",
+    "prompt_tokens": 1096,
+    "completion_tokens": 307,
+    "total_tokens": 1403,
+    "duration_ms": 844.531774520874
+  },
+  "gen:gemini-3.1-flash-lite:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:3847715136818199887": {
+    "text": "The lexical database used for semantic sense disambiguation and synonym expansion in the pipeline is **WordNet**. It provides synsets, definitions, synonyms, and hypernym relations for semantic inspection.",
+    "prompt_tokens": 1601,
+    "candidate_tokens": 37,
+    "total_tokens": 1638,
+    "duration_ms": 1030.5769443511963
+  },
+  "judge:openai/gpt-oss-120b:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:-6861985393148331339": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly names WordNet and all claims are backed by the provided context.",
+    "prompt_tokens": 951,
+    "completion_tokens": 251,
+    "total_tokens": 1202,
+    "duration_ms": 10041.998386383057
+  },
+  "gen:gemini-3.1-flash-lite:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:-8278232986559473624": {
+    "text": "The research on AI-Blockchain based E-Healthcare Records Management Systems was funded by the **Air Force Office of Scientific Research** (award number FA2386-21-1-4025). The research was conducted at the **International Islamic University Malaysia (IIUM)**, located in Jalan Gombak, Kuala Lumpur, Malaysia.",
+    "prompt_tokens": 2130,
+    "candidate_tokens": 71,
+    "total_tokens": 2201,
+    "duration_ms": 1277.3175239562988
+  },
+  "judge:openai/gpt-oss-120b:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:7348338976317584821": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies the Air Force Office of Scientific Research and International Islamic University Malaysia, matching the ground truth and supported by the provided context.",
+    "prompt_tokens": 1109,
+    "completion_tokens": 363,
+    "total_tokens": 1472,
+    "duration_ms": 4088.68670463562
+  },
+  "gen:gemini-3.1-flash-lite:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-2128437132885672206": {
+    "text": "In the NLP project:\n\n*   **Supervised neural model:** DistilBERT was fine-tuned for sequence classification.\n*   **NLP library for tokenization:** NLTK was used for sentence and word tokenization.",
+    "prompt_tokens": 1499,
+    "candidate_tokens": 47,
+    "total_tokens": 1546,
+    "duration_ms": 1343.2152271270752
+  },
+  "judge:openai/gpt-oss-120b:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-1495203810163138759": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states DistilBERT and NLTK, matching the ground truth and supported by the retrieved context.",
+    "prompt_tokens": 947,
+    "completion_tokens": 237,
+    "total_tokens": 1184,
+    "duration_ms": 10080.8846950531
+  },
+  "gen:gemini-3.1-flash-lite:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:-1214081347703862870": {
+    "text": "The allocated funding amount for the \"DC micro grid based solar PV generation\" proposal at Aarupadai Veedu Institute of Technology is 50,000.00.",
+    "prompt_tokens": 2102,
+    "candidate_tokens": 37,
+    "total_tokens": 2139,
+    "duration_ms": 1465.6236171722412
+  },
+  "judge:openai/gpt-oss-120b:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:399798067770995081": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the funding amount of 50,000.00, which is directly supported by the retrieved table entry.",
+    "prompt_tokens": 1101,
+    "completion_tokens": 224,
+    "total_tokens": 1325,
+    "duration_ms": 3895.5984115600586
+  },
+  "gen:gemini-3.1-flash-lite:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:2713301608406257534": {
+    "text": "The provided document does not contain information regarding a project for \"seed ball production equipment\" or \"Adhiyamaan College.\" Therefore, the requested information is not in the document.",
+    "prompt_tokens": 2143,
+    "candidate_tokens": 35,
+    "total_tokens": 2178,
+    "duration_ms": 1499.072551727295
+  },
+  "judge:openai/gpt-oss-120b:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:9001196168627199901": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses to provide the known funding amount and its claim that the document lacks the information is not supported by the provided context.",
+    "prompt_tokens": 1147,
+    "completion_tokens": 329,
+    "total_tokens": 1476,
+    "duration_ms": 10191.783666610718
+  },
+  "gen:gemini-3.1-flash-lite:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:5447183709023699063": {
+    "text": "The weighted F1 score reported for the comparative classifier model (Fine-tuned DistilBERT) is **35.92%**.",
+    "prompt_tokens": 1411,
+    "candidate_tokens": 28,
+    "total_tokens": 1439,
+    "duration_ms": 973.6413955688477
+  },
+  "judge:openai/gpt-oss-120b:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:8693126274140887941": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer provides an incorrect weighted F1 value (35.92%) that contradicts the ground truth (24%) and is not supported by the retrieved context.",
+    "prompt_tokens": 879,
+    "completion_tokens": 212,
+    "total_tokens": 1091,
+    "duration_ms": 3859.8833084106445
+  },
+  "gen:gemini-3.1-flash-lite:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:-2004691338780171699": {
+    "text": "The provided document does not contain the personal mobile phone number or bank account IFSC code of Dr. Rohit Rastogi.",
+    "prompt_tokens": 2055,
+    "candidate_tokens": 23,
+    "total_tokens": 2078,
+    "duration_ms": 1036.133050918579
+  },
+  "judge:openai/gpt-oss-120b:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:-6356797547215155200": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses to provide the personal phone number and IFSC, matching the unanswerable ground truth and is supported by the provided context.",
+    "prompt_tokens": 1092,
+    "completion_tokens": 247,
+    "total_tokens": 1339,
+    "duration_ms": 11298.185586929321
+  },
+  "gen:gemini-3.1-flash-lite:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:1794624717966578914": {
+    "text": "The provided document does not contain information regarding the Ministry of New and Renewable Energy, subsidy percentages, or the 2029 budget cycle. Therefore, this information is not available in the document.",
+    "prompt_tokens": 2141,
+    "candidate_tokens": 40,
+    "total_tokens": 2181,
+    "duration_ms": 1202.1875381469727
+  },
+  "judge:openai/gpt-oss-120b:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:-5091843795051235241": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses due to lack of information and its claim is supported by the provided context.",
+    "prompt_tokens": 1158,
+    "completion_tokens": 272,
+    "total_tokens": 1430,
+    "duration_ms": 3944.7081089019775
+  },
+  "gen:gemini-3.1-flash-lite:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:-6661931074864055144": {
+    "text": "The provided document does not contain information regarding hostel mess fees or a Paris campus annex. Therefore, this information is not available in the document.",
+    "prompt_tokens": 1967,
+    "candidate_tokens": 28,
+    "total_tokens": 1995,
+    "duration_ms": 1729.4762134552002
+  },
+  "judge:openai/gpt-oss-120b:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:-2986304953436607128": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly states that the document lacks the requested information, matching the unanswerable ground truth and not adding unsupported claims.",
+    "prompt_tokens": 985,
+    "completion_tokens": 257,
+    "total_tokens": 1242,
+    "duration_ms": 10105.00168800354
+  },
+  "gen:gemini-3.1-flash-lite:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:5899215649684584226": {
+    "text": "The provided document does not contain information regarding a placement package offered by Sony Tokyo or any information regarding placements in Japanese Yen. Therefore, this information is not in the document.",
+    "prompt_tokens": 1994,
+    "candidate_tokens": 34,
+    "total_tokens": 2028,
+    "duration_ms": 1026.1261463165283
+  },
+  "judge:openai/gpt-oss-120b:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:40629235902997950": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly indicates the information is missing, matching the unanswerable ground truth and is supported by the provided context.",
+    "prompt_tokens": 1215,
+    "completion_tokens": 318,
+    "total_tokens": 1533,
+    "duration_ms": 10292.820930480957
+  },
+  "gen:gemini-3.1-flash-lite:Which laboratory was the healthcare review research conducted at?:1224767012004087158": {
+    "text": "The research was conducted at the IoT & wireless communication protocols laboratory at the International Islamic University Malaysia (IIUM).",
+    "prompt_tokens": 2077,
+    "candidate_tokens": 21,
+    "total_tokens": 2098,
+    "duration_ms": 1150.1688957214355
+  },
+  "judge:openai/gpt-oss-120b:Which laboratory was the healthcare review research conducted at?:-2039319713102095317": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies the IoT & wireless communication protocols laboratory at IIUM, matching the ground truth and supported by the retrieved context.",
+    "prompt_tokens": 967,
+    "completion_tokens": 212,
+    "total_tokens": 1179,
+    "duration_ms": 1067.0411586761475
+  },
+  "gen:gemini-3.1-flash-lite:What award number supported the material in the healthcare review?:-3653878875375499560": {
+    "text": "The material is supported by the Air Force Office of Scientific Research under award number FA2386-21-1-4025.",
+    "prompt_tokens": 2271,
+    "candidate_tokens": 31,
+    "total_tokens": 2302,
+    "duration_ms": 1054.9771785736084
+  },
+  "judge:openai/gpt-oss-120b:What award number supported the material in the healthcare review?:8256807491284939561": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly provides the award number FA2386-21-1-4025 as stated in the context, with no unsupported claims.",
+    "prompt_tokens": 953,
+    "completion_tokens": 187,
+    "total_tokens": 1140,
+    "duration_ms": 10451.28583908081
+  },
+  "gen:gemini-3.1-flash-lite:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:2228542192761878720": {
+    "text": "When smart contracts are used to make decisions and conduct analytics with machine-learning algorithms, the results may be trusted and unquestioned.",
+    "prompt_tokens": 1451,
+    "candidate_tokens": 26,
+    "total_tokens": 1477,
+    "duration_ms": 1117.6862716674805
+  },
+  "judge:openai/gpt-oss-120b:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:-4439177631713518149": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states that results may be trusted and unquestioned, matching the ground truth and directly supported by the context.",
+    "prompt_tokens": 868,
+    "completion_tokens": 278,
+    "total_tokens": 1146,
+    "duration_ms": 1126.373291015625
+  },
+  "gen:gemini-3.1-flash-lite:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:8238169194658973312": {
+    "text": "The PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College, Ghaziabad, is Dr. Rohit Rastogi.",
+    "prompt_tokens": 2098,
+    "candidate_tokens": 27,
+    "total_tokens": 2125,
+    "duration_ms": 3497.7691173553467
+  },
+  "gen:gemini-3.1-flash-lite:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:-189592852724408036": {
+    "text": "According to the Principal, a single enterprising graduate can offer scalable, high-impact services to millions of global enterprises by leveraging Agentic AI solutions.",
+    "prompt_tokens": 1633,
+    "candidate_tokens": 29,
+    "total_tokens": 1662,
+    "duration_ms": 1298.0515956878662
+  },
+  "judge:openai/gpt-oss-120b:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:1082716318105666812": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states that leveraging Agentic AI solutions enables a graduate to offer scalable high-impact services, matching the ground truth and directly supported by the retrieved context.",
+    "prompt_tokens": 877,
+    "completion_tokens": 284,
+    "total_tokens": 1161,
+    "duration_ms": 1029.266357421875
+  },
+  "gen:gemini-3.1-flash-lite:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-7832530461107673561": {
+    "text": "The technological domain that offers a frontier of purpose-driven innovation for assistive technologies is Mobile Robotics.",
+    "prompt_tokens": 1505,
+    "candidate_tokens": 19,
+    "total_tokens": 1524,
+    "duration_ms": 1054.1503429412842
+  },
+  "judge:openai/gpt-oss-120b:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-6971775385425829658": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer correctly states Mobile Robotics, matching ground truth and supported by the retrieved context.",
+    "prompt_tokens": 930,
+    "completion_tokens": 236,
+    "total_tokens": 1166,
+    "duration_ms": 3840.876817703247
+  },
+  "gen:gemini-3.1-flash-lite:What does a graduate assert about how TSEC prepares its students?:-8771716426593574453": {
+    "text": "A graduate asserts that TSEC prepares its students for a competitive corporate world by providing a robust curriculum, excellent faculty, and a platform that encourages students to grow not just technically, but also socially and culturally through various committees and technical societies. This environment allows students to implement knowledge in real-life scenarios, fostering the emotional maturity and practical competence required for professional success.",
+    "prompt_tokens": 1592,
+    "candidate_tokens": 72,
+    "total_tokens": 1664,
+    "duration_ms": 1585.3815078735352
+  },
+  "judge:openai/gpt-oss-120b:What does a graduate assert about how TSEC prepares its students?:6924022516846206318": {
+    "correctness": 1,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "Correct core claim but includes unsupported details not in the retrieved context",
+    "prompt_tokens": 948,
+    "completion_tokens": 554,
+    "total_tokens": 1502,
+    "duration_ms": 4476.338148117065
+  },
+  "gen:gemini-3.1-flash-lite:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:-5274987167195350595": {
+    "text": "The primary contact person for the document is Nurul Fadzlin Hasbullah (nfadzlinh@iium.edu.my).",
+    "prompt_tokens": 1606,
+    "candidate_tokens": 29,
+    "total_tokens": 1635,
+    "duration_ms": 4333.332538604736
+  },
+  "judge:openai/gpt-oss-120b:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:4688736281110468314": {
+    "correctness": 1,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer correctly gives the ground\u2011truth contact name, but this information is not present in the provided context, so it is not faithful.",
+    "prompt_tokens": 938,
+    "completion_tokens": 224,
+    "total_tokens": 1162,
+    "duration_ms": 10282.963514328003
+  },
+  "gen:gemini-3.1-flash-lite:What international geographic address identifies the location of the wireless communication laboratory?:-9127514063119457917": {
+    "text": "The provided text does not contain information regarding the location or address of a wireless communication laboratory.",
+    "prompt_tokens": 2259,
+    "candidate_tokens": 18,
+    "total_tokens": 2277,
+    "duration_ms": 5080.551624298096
+  },
+  "judge:openai/gpt-oss-120b:What international geographic address identifies the location of the wireless communication laboratory?:-2344612543617906910": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer refuses to provide the known address despite the question being answerable, so correctness is 0, though the refusal is faithful to the given context.",
+    "prompt_tokens": 1018,
+    "completion_tokens": 269,
+    "total_tokens": 1287,
+    "duration_ms": 1133.3644390106201
+  },
+  "gen:gemini-3.1-flash-lite:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:878181049553352076": {
+    "text": "The Aarupadai Veedu Institute of Technology (AISHE code C-10224) undertook the \"Fabrication and Installation of Seed Balls Production Equipment.\"",
+    "prompt_tokens": 2183,
+    "candidate_tokens": 34,
+    "total_tokens": 2217,
+    "duration_ms": 4981.831073760986
+  },
+  "judge:openai/gpt-oss-120b:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:6295703012764241584": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer correctly identifies Aarupadai Veedu Institute of Technology and matches context without unsupported claims.",
+    "prompt_tokens": 1145,
+    "completion_tokens": 389,
+    "total_tokens": 1534,
+    "duration_ms": 1659.2798233032227
+  },
+  "gen:gemini-3.1-flash-lite:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:2152175698540064604": {
+    "text": "The higher educational institution in Ghaziabad with the AISHE code C-46112 is **ABES Engineering College**.",
+    "prompt_tokens": 2111,
+    "candidate_tokens": 27,
+    "total_tokens": 2138,
+    "duration_ms": 2615.049362182617
+  },
+  "judge:openai/gpt-oss-120b:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:5087717958179821311": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states ABES Engineering College, which is present in the retrieved context.",
+    "prompt_tokens": 1075,
+    "completion_tokens": 250,
+    "total_tokens": 1325,
+    "duration_ms": 10118.547439575195
+  },
+  "gen:gemini-3.1-flash-lite:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:-7193003856036268954": {
+    "text": "The lexical database used for semantic inspection, including retrieving synsets, definitions, synonyms, and hypernym relations, is **WordNet**.",
+    "prompt_tokens": 1570,
+    "candidate_tokens": 27,
+    "total_tokens": 1597,
+    "duration_ms": 3885.209321975708
+  },
+  "judge:openai/gpt-oss-120b:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:-8762745041478197600": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies WordNet as the lexical database and all claims are supported by the provided context.",
+    "prompt_tokens": 938,
+    "completion_tokens": 246,
+    "total_tokens": 1184,
+    "duration_ms": 699.5401382446289
+  },
+  "gen:gemini-3.1-flash-lite:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:-7187381232980855572": {
+    "text": "The research on AI-Blockchain based E-Healthcare Records Management Systems was funded by the **Air Force Office of Scientific Research** (award number FA2386-21-1-4025). The research was conducted at the **International Islamic University Malaysia (IIUM)**.",
+    "prompt_tokens": 2161,
+    "candidate_tokens": 59,
+    "total_tokens": 2220,
+    "duration_ms": 3742.8109645843506
+  },
+  "judge:openai/gpt-oss-120b:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:5603293609943042209": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies the Air Force Office of Scientific Research and International Islamic University Malaysia, matching the ground truth and supported by the provided context.",
+    "prompt_tokens": 1097,
+    "completion_tokens": 270,
+    "total_tokens": 1367,
+    "duration_ms": 783.6134433746338
+  },
+  "gen:gemini-3.1-flash-lite:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-4665038746013237565": {
+    "text": "In the NLP project, the supervised neural model fine-tuned for sequence classification was **DistilBERT**. The **NLTK** library was used to handle linguistic tokenization (along with other processes such as sentence segmentation, POS tagging, and lemmatization).",
+    "prompt_tokens": 1551,
+    "candidate_tokens": 53,
+    "total_tokens": 1604,
+    "duration_ms": 5435.521125793457
+  },
+  "judge:openai/gpt-oss-120b:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-398959479803683947": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states DistilBERT and NLTK as in the ground truth and all claims are supported by the provided context.",
+    "prompt_tokens": 924,
+    "completion_tokens": 280,
+    "total_tokens": 1204,
+    "duration_ms": 904.6096801757812
+  },
+  "gen:gemini-3.1-flash-lite:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:5464492591312056398": {
+    "text": "The allocated funding amount for the \"DC micro grid based solar PV generation to supply power to street lamp and common utilities in a village\" proposal at Aarupadai Veedu Institute of Technology is 50,000.00.",
+    "prompt_tokens": 2104,
+    "candidate_tokens": 49,
+    "total_tokens": 2153,
+    "duration_ms": 3906.5120220184326
+  },
+  "judge:openai/gpt-oss-120b:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:6036806422029734396": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer correctly states the funding amount and is supported by the provided context.",
+    "prompt_tokens": 1086,
+    "completion_tokens": 200,
+    "total_tokens": 1286,
+    "duration_ms": 4260.6751918792725
+  },
+  "gen:gemini-3.1-flash-lite:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:-1463221280305624197": {
+    "text": "The provided document does not contain information regarding \"seed ball production equipment\" or \"Adhiyamaan College.\" Therefore, the requested information is not in the document.",
+    "prompt_tokens": 2166,
+    "candidate_tokens": 32,
+    "total_tokens": 2198,
+    "duration_ms": 2466.543197631836
+  },
+  "judge:openai/gpt-oss-120b:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:-4962397461495911743": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer refuses to provide the known funding amount, which is incorrect for an answerable question, though its claim that the document lacks the info is supported by the retrieved context.",
+    "prompt_tokens": 1116,
+    "completion_tokens": 312,
+    "total_tokens": 1428,
+    "duration_ms": 4035.9058380126953
+  },
+  "gen:gemini-3.1-flash-lite:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:3999961152831221963": {
+    "text": "Based on the provided text, the report compares the **TF-IDF + Logistic Regression** model with the **fine-tuned DistilBERT** model. The weighted F1 scores reported for these models are:\n\n*   **TF-IDF + Logistic Regression:** 70.24%\n*   **Fine-tuned DistilBERT:** 35.92%",
+    "prompt_tokens": 1716,
+    "candidate_tokens": 78,
+    "total_tokens": 1794,
+    "duration_ms": 4603.737354278564
+  },
+  "judge:openai/gpt-oss-120b:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:1774296968023994154": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer provides weighted F1 scores from the context (70.24% and 35.92%) which are supported, but it does not match the ground truth value of 24%, so it is incorrect.",
+    "prompt_tokens": 1030,
+    "completion_tokens": 338,
+    "total_tokens": 1368,
+    "duration_ms": 4080.4038047790527
+  },
+  "gen:gemini-3.1-flash-lite:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:-5707752465794370008": {
+    "text": "The provided document does not contain the personal mobile phone number or bank account IFSC code for Dr. Rohit Rastogi.",
+    "prompt_tokens": 2158,
+    "candidate_tokens": 23,
+    "total_tokens": 2181,
+    "duration_ms": 1099.8497009277344
+  },
+  "judge:openai/gpt-oss-120b:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:-6453749649335245696": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses, matching the unanswerable ground truth, and its claim that the document lacks the requested details is supported by the context.",
+    "prompt_tokens": 1110,
+    "completion_tokens": 233,
+    "total_tokens": 1343,
+    "duration_ms": 10556.239128112793
+  },
+  "gen:gemini-3.1-flash-lite:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:1017001970343190641": {
+    "text": "The provided document does not contain information regarding the Ministry of New and Renewable Energy or subsidy percentages for solar cookers in the 2029 budget cycle.",
+    "prompt_tokens": 2153,
+    "candidate_tokens": 32,
+    "total_tokens": 2185,
+    "duration_ms": 4607.295036315918
+  },
+  "judge:openai/gpt-oss-120b:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:7759011067586864068": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses, matching the ground truth and is supported by the provided context.",
+    "prompt_tokens": 1143,
+    "completion_tokens": 356,
+    "total_tokens": 1499,
+    "duration_ms": 968.4321880340576
+  },
+  "gen:gemini-3.1-flash-lite:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:-8412957877574998511": {
+    "text": "The provided document does not contain information regarding hostel mess fees or an annex at a Paris campus.",
+    "prompt_tokens": 1767,
+    "candidate_tokens": 19,
+    "total_tokens": 1786,
+    "duration_ms": 971.3242053985596
+  },
+  "judge:openai/gpt-oss-120b:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:-2312948623185386851": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses, matching the unanswerable ground truth and is supported by the provided context.",
+    "prompt_tokens": 976,
+    "completion_tokens": 251,
+    "total_tokens": 1227,
+    "duration_ms": 10458.002805709839
+  },
+  "gen:gemini-3.1-flash-lite:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:-7166219164825925688": {
+    "text": "The provided document does not contain information regarding a placement package offered by Sony Tokyo in 2021.",
+    "prompt_tokens": 2065,
+    "candidate_tokens": 22,
+    "total_tokens": 2087,
+    "duration_ms": 3783.658981323242
+  },
+  "judge:openai/gpt-oss-120b:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:-2186970119379540048": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses due to missing information and does not assert unsupported facts.",
+    "prompt_tokens": 1003,
+    "completion_tokens": 228,
+    "total_tokens": 1231,
+    "duration_ms": 684.0682029724121
+  },
+  "gen:gemini-3.1-flash-lite:Which laboratory was the healthcare review research conducted at?:7317134932017550945": {
+    "text": "The provided text does not state the name of the laboratory where the research was conducted. It mentions that the MedRec framework prototype was developed and tested in collaboration with the \"Harvard Medical School Teaching Hospital,\" but it does not identify a specific laboratory for the review research itself.",
+    "prompt_tokens": 1734,
+    "candidate_tokens": 54,
+    "total_tokens": 1788,
+    "duration_ms": 1456.817388534546
+  },
+  "judge:openai/gpt-oss-120b:Which laboratory was the healthcare review research conducted at?:-2133317465080727303": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly claims the lab name is not in the text, missing the ground\u2011truth lab (IoT & wireless communication protocols laboratory, IIUM), though its claim about the provided excerpt is faithful.",
+    "prompt_tokens": 948,
+    "completion_tokens": 448,
+    "total_tokens": 1396,
+    "duration_ms": 1545.4015731811523
+  },
+  "gen:gemini-3.1-flash-lite:What award number supported the material in the healthcare review?:-5767506114046600503": {
+    "text": "The material in the healthcare review was supported by the Air Force Office of Scientific Research under award number FA2386-21-1-4025.",
+    "prompt_tokens": 2078,
+    "candidate_tokens": 35,
+    "total_tokens": 2113,
+    "duration_ms": 1602.027177810669
+  },
+  "judge:openai/gpt-oss-120b:What award number supported the material in the healthcare review?:7423262326226255383": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the award number FA2386-21-1-4025, matching the ground truth and directly supported by the retrieved context.",
+    "prompt_tokens": 1083,
+    "completion_tokens": 263,
+    "total_tokens": 1346,
+    "duration_ms": 1018.6221599578857
+  },
+  "gen:gemini-3.1-flash-lite:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:4252923515917882506": {
+    "text": "Based on the provided text, the integration of smart contracts with machine learning and AI offers several capabilities:\n\n*   **Automated Management and Enforcement:** AI agents can be employed to perform duties such as enforcing laws, improving records, detecting suspicious activity, and making recommendations for upgrading smart contracts across a network.\n*   **Security and Integrity:** Machine learning techniques can detect fake electronic health records (EHRs) to ensure only authentic data is maintained on the blockchain. Additionally, deep learning can recover and store previously damaged medical records to enhance knowledge, such as for drug analysis and prediction.\n*   **System Optimization:** Projects like MATRIX use AI to enable the automated development of intelligent contracts, enhance protection against malicious attacks, and facilitate highly scalable operations.\n*   **Data Provenance:** Blockchain enables an irreversible and highly secure configuration of learning models by maintaining data provenance and history.",
+    "prompt_tokens": 1448,
+    "candidate_tokens": 177,
+    "total_tokens": 1625,
+    "duration_ms": 1557.2006702423096
+  },
+  "judge:openai/gpt-oss-120b:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:-7568996786497757722": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer fails to convey that results may be trusted and unquestioned and adds unsupported details not present in the retrieved context.",
+    "prompt_tokens": 1024,
+    "completion_tokens": 357,
+    "total_tokens": 1381,
+    "duration_ms": 2303.2004833221436
+  },
+  "gen:gemini-3.1-flash-lite:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:8154288794940604429": {
+    "text": "The PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College, Ghaziabad, is Dr. Rohit Rastogi.",
+    "prompt_tokens": 2119,
+    "candidate_tokens": 27,
+    "total_tokens": 2146,
+    "duration_ms": 1301.208257675171
+  },
+  "judge:openai/gpt-oss-120b:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:-2870907360364738210": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states Dr. Rohit Rastogi, matching the ground truth and is directly supported by the retrieved context.",
+    "prompt_tokens": 1079,
+    "completion_tokens": 175,
+    "total_tokens": 1254,
+    "duration_ms": 869.5347309112549
+  },
+  "gen:gemini-3.1-flash-lite:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:4508507286231822440": {
+    "text": "According to the document, a single enterprising graduate can offer scalable, high-impact services to millions of global enterprises by leveraging Agentic AI solutions.",
+    "prompt_tokens": 1543,
+    "candidate_tokens": 29,
+    "total_tokens": 1572,
+    "duration_ms": 1116.6470050811768
+  },
+  "judge:openai/gpt-oss-120b:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:1788840512507469115": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer correctly states leveraging Agentic AI solutions, matching ground truth and supported by the context.",
+    "prompt_tokens": 901,
+    "completion_tokens": 330,
+    "total_tokens": 1231,
+    "duration_ms": 1440.0098323822021
+  },
+  "gen:gemini-3.1-flash-lite:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-6035919628231252346": {
+    "text": "Based on the provided document, the text does not explicitly identify a specific \"technological domain\" as a \"frontier of purpose-driven innovation for assistive technologies.\"\n\nWhile the document discusses various high-impact research areas\u2014such as Artificial Intelligence, Machine Learning, Deep Learning, Internet of Things, and Healthcare and Biomedical Applications\u2014it does not use the specific phrase \"frontier of purpose-driven innovation\" in relation to assistive technologies.",
+    "prompt_tokens": 1420,
+    "candidate_tokens": 86,
+    "total_tokens": 1506,
+    "duration_ms": 1794.9364185333252
+  },
+  "judge:openai/gpt-oss-120b:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:8742688451667009124": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer does not give the ground\u2011truth domain 'Mobile Robotics', so it is incorrect, though its claim that the text lacks an explicit domain is faithful to the provided context.",
+    "prompt_tokens": 909,
+    "completion_tokens": 330,
+    "total_tokens": 1239,
+    "duration_ms": 998.7771511077881
+  },
+  "gen:gemini-3.1-flash-lite:What does a graduate assert about how TSEC prepares its students?:-3938650821858374818": {
+    "text": "Based on the provided document, graduates assert that TSEC prepares students in the following ways:\n\n*   **Practical Application:** The college provides opportunities through technical societies and associations to implement learning in real life, rather than just focusing on classroom study and memorization.\n*   **Skill Development:** Students are encouraged to develop academically while also improving their ability to communicate ideas and work toward solutions effectively.\n*   **Industry Alignment:** The faculty is described as proactive and knowledgeable, ensuring that programs are aligned with industry demands through interactions with professionals (e.g., quizzes, external evaluations, seminars, and workshops).\n*   **Mentorship and Support:** Faculty provide guidance and mentorship that play a vital role in securing campus placements and cultivating professional passions.\n*   **Holistic Growth:** The environment fosters confidence, emotional maturity, and interpersonal skills, which graduates note are essential for corporate life.",
+    "prompt_tokens": 1615,
+    "candidate_tokens": 179,
+    "total_tokens": 1794,
+    "duration_ms": 1710.8409404754639
+  },
+  "judge:openai/gpt-oss-120b:What does a graduate assert about how TSEC prepares its students?:-3917471084493020652": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly conveys that graduates say TSEC prepares them for corporate life and all listed points are supported by the provided context.",
+    "prompt_tokens": 1105,
+    "completion_tokens": 414,
+    "total_tokens": 1519,
+    "duration_ms": 2534.2330932617188
+  },
+  "gen:gemini-3.1-flash-lite:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:7471696687551742647": {
+    "text": "The provided text does not contain information regarding a primary contact person for queries about the blockchain electronic health record survey.",
+    "prompt_tokens": 2007,
+    "candidate_tokens": 22,
+    "total_tokens": 2029,
+    "duration_ms": 1325.6850242614746
+  },
+  "judge:openai/gpt-oss-120b:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:3806497157084075": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer refuses to provide the known contact despite the question being answerable, so correctness is 0 though the refusal is faithful to the given context.",
+    "prompt_tokens": 923,
+    "completion_tokens": 339,
+    "total_tokens": 1262,
+    "duration_ms": 1208.9776992797852
+  },
+  "gen:gemini-3.1-flash-lite:What international geographic address identifies the location of the wireless communication laboratory?:-1984654461195238687": {
+    "text": "The provided document does not contain information regarding the location of a wireless communication laboratory.",
+    "prompt_tokens": 2112,
+    "candidate_tokens": 16,
+    "total_tokens": 2128,
+    "duration_ms": 1227.4456024169922
+  },
+  "judge:openai/gpt-oss-120b:What international geographic address identifies the location of the wireless communication laboratory?:879797593212584571": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses to provide the address even though the question is answerable and the ground truth exists.",
+    "prompt_tokens": 1174,
+    "completion_tokens": 241,
+    "total_tokens": 1415,
+    "duration_ms": 10292.319059371948
+  },
+  "gen:gemini-3.1-flash-lite:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:-4631886766018410847": {
+    "text": "The provided document does not contain information regarding an educational center with AISHE code C-10224 or the fabrication of automated seed ball generation machinery.",
+    "prompt_tokens": 2233,
+    "candidate_tokens": 32,
+    "total_tokens": 2265,
+    "duration_ms": 1035.9554290771484
+  },
+  "judge:openai/gpt-oss-120b:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:4533329193400538075": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses to provide the known answer despite the question being answerable, though its claim about missing info is faithful to the given context.",
+    "prompt_tokens": 1160,
+    "completion_tokens": 265,
+    "total_tokens": 1425,
+    "duration_ms": 10553.783178329468
+  },
+  "gen:gemini-3.1-flash-lite:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:7910064973152198967": {
+    "text": "The higher educational institution in Ghaziabad with the AISHE identification code C-46112 is **ABES Engineering College**.",
+    "prompt_tokens": 2154,
+    "candidate_tokens": 28,
+    "total_tokens": 2182,
+    "duration_ms": 1277.0025730133057
+  },
+  "judge:openai/gpt-oss-120b:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:6069682037756115273": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "Answer matches ground truth and is directly supported by the retrieved context",
+    "prompt_tokens": 1091,
+    "completion_tokens": 247,
+    "total_tokens": 1338,
+    "duration_ms": 4442.564010620117
+  },
+  "gen:gemini-3.1-flash-lite:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:6096357195432786380": {
+    "text": "The lexical database used for semantic sense disambiguation and synonym expansion is **WordNet**. It provides synsets, definitions, synonyms, and hypernym relations for semantic inspection.",
+    "prompt_tokens": 1601,
+    "candidate_tokens": 34,
+    "total_tokens": 1635,
+    "duration_ms": 1565.0415420532227
+  },
+  "judge:openai/gpt-oss-120b:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:-7002970894597411225": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies WordNet and its supported features, which are all present in the provided context.",
+    "prompt_tokens": 948,
+    "completion_tokens": 342,
+    "total_tokens": 1290,
+    "duration_ms": 10357.108354568481
+  },
+  "gen:gemini-3.1-flash-lite:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:-7526541022818322482": {
+    "text": "The e-health record research was funded by the Air Force Office of Scientific Research (award number FA2386-21-1-4025). The research was conducted at the International Islamic University Malaysia (IIUM) in Jalan Gombak, Kuala Lumpur.",
+    "prompt_tokens": 2130,
+    "candidate_tokens": 57,
+    "total_tokens": 2187,
+    "duration_ms": 1158.994436264038
+  },
+  "judge:openai/gpt-oss-120b:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:2444889869545677765": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the Air Force Office of Scientific Research funded the work and that it was conducted at IIUM, both supported by the provided context.",
+    "prompt_tokens": 1094,
+    "completion_tokens": 460,
+    "total_tokens": 1554,
+    "duration_ms": 12187.60347366333
+  },
+  "gen:gemini-3.1-flash-lite:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-4033591118934455576": {
+    "text": "In the NLP project:\n\n*   **Supervised neural model:** DistilBERT was fine-tuned for sequence classification.\n*   **NLP library for tokenization:** NLTK was used for sentence and word tokenization.",
+    "prompt_tokens": 1499,
+    "candidate_tokens": 47,
+    "total_tokens": 1546,
+    "duration_ms": 1181.0731887817383
+  },
+  "judge:openai/gpt-oss-120b:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-3323984797397406270": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies DistilBERT and NLTK as in the ground truth and these claims are supported by the retrieved context.",
+    "prompt_tokens": 947,
+    "completion_tokens": 246,
+    "total_tokens": 1193,
+    "duration_ms": 1212.881326675415
+  },
+  "gen:gemini-3.1-flash-lite:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:5586415527049121408": {
+    "text": "The allocated funding amount for the \"DC micro grid based solar PV generation to supply power to street lamp and common utilities in a village\" proposal at Aarupadai Veedu Institute of Technology is 50,000.00.",
+    "prompt_tokens": 2102,
+    "candidate_tokens": 49,
+    "total_tokens": 2151,
+    "duration_ms": 1472.9251861572266
+  },
+  "gen:gemini-3.1-flash-lite:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:5329642444318260921": {
+    "text": "The provided document does not contain information regarding a project for \"seed ball production equipment\" or \"Adhiyamaan College.\" Therefore, the requested information is not in the document.",
+    "prompt_tokens": 2143,
+    "candidate_tokens": 35,
+    "total_tokens": 2178,
+    "duration_ms": 5969403.902769089
+  },
+  "judge:openai/gpt-oss-120b:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:-6529115274107547925": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer incorrectly refuses despite the question being answerable with a known amount, though the claim about missing info is faithful to the provided context.",
+    "prompt_tokens": 1147,
+    "completion_tokens": 380,
+    "total_tokens": 1527,
+    "duration_ms": 1151.7255306243896
+  },
+  "gen:gemini-3.1-flash-lite:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:6098272846940776232": {
+    "text": "The weighted F1 score for the comparative classifier model (Fine-tuned DistilBERT) reported in the document is 35.92%.",
+    "prompt_tokens": 1411,
+    "candidate_tokens": 30,
+    "total_tokens": 1441,
+    "duration_ms": 958.8494300842285
+  },
+  "judge:openai/gpt-oss-120b:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:-4818049680367214363": {
+    "correctness": 0,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer gives an incorrect weighted F1 value (35.92%) that contradicts the ground truth (24%) and is not supported by the provided context.",
+    "prompt_tokens": 880,
+    "completion_tokens": 260,
+    "total_tokens": 1140,
+    "duration_ms": 1518.8062191009521
+  },
+  "gen:gemini-3.1-flash-lite:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:252399871935448755": {
+    "text": "The provided document does not contain the personal mobile phone number or bank account IFSC code for Dr. Rohit Rastogi.",
+    "prompt_tokens": 2055,
+    "candidate_tokens": 23,
+    "total_tokens": 2078,
+    "duration_ms": 951.4217376708984
+  },
+  "judge:openai/gpt-oss-120b:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:-4120893459312935178": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses, matching the unanswerable ground truth, and its claim that the document lacks the requested details is supported by the context.",
+    "prompt_tokens": 1092,
+    "completion_tokens": 231,
+    "total_tokens": 1323,
+    "duration_ms": 1010.1103782653809
+  },
+  "gen:gemini-3.1-flash-lite:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:6351538460600930135": {
+    "text": "The provided document does not contain information regarding the Ministry of New and Renewable Energy or any subsidy percentages for solar cookers in the 2029 budget cycle.",
+    "prompt_tokens": 2141,
+    "candidate_tokens": 33,
+    "total_tokens": 2174,
+    "duration_ms": 1225.3611087799072
+  },
+  "judge:openai/gpt-oss-120b:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:5923234207120229282": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses, matching the unanswerable ground truth and is supported by the provided context.",
+    "prompt_tokens": 1151,
+    "completion_tokens": 266,
+    "total_tokens": 1417,
+    "duration_ms": 1107.4068546295166
+  },
+  "gen:gemini-3.1-flash-lite:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:6280115385293131403": {
+    "text": "The provided document does not contain information regarding hostel mess fees or a Paris campus annex. Therefore, this information is not available in the document.",
+    "prompt_tokens": 1967,
+    "candidate_tokens": 28,
+    "total_tokens": 1995,
+    "duration_ms": 1461.3490104675293
+  },
+  "judge:openai/gpt-oss-120b:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:2090581427303742072": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly states that the document lacks the requested information, matching the unanswerable ground truth and not adding unsupported claims.",
+    "prompt_tokens": 985,
+    "completion_tokens": 254,
+    "total_tokens": 1239,
+    "duration_ms": 2708694.714784622
+  },
+  "gen:gemini-3.1-flash-lite:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:634937621902629351": {
+    "text": "The provided document does not contain information regarding a placement package offered by Sony Tokyo or any data in Japanese Yen. Therefore, this information is not in the document.",
+    "prompt_tokens": 1994,
+    "candidate_tokens": 32,
+    "total_tokens": 2026,
+    "duration_ms": 2340.98219871521
+  },
+  "judge:openai/gpt-oss-120b:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:3039972428968604829": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses due to lack of Sony Tokyo data and makes no unsupported claims.",
+    "prompt_tokens": 1213,
+    "completion_tokens": 235,
+    "total_tokens": 1448,
+    "duration_ms": 1058.6371421813965
+  },
+  "judge:openai/gpt-oss-120b:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:4355636277254869093": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the funding amount as 50,000.00, which is present in the retrieved context.",
+    "prompt_tokens": 1113,
+    "completion_tokens": 211,
+    "total_tokens": 1324,
+    "duration_ms": 807.8949451446533
+  },
+  "gen:gemini-3.1-flash-lite:Which laboratory was the healthcare review research conducted at?:7878000279855185343": {
+    "text": "The research was conducted at the IoT & wireless communication protocols laboratory at the International Islamic University Malaysia (IIUM).",
+    "prompt_tokens": 2077,
+    "candidate_tokens": 21,
+    "total_tokens": 2098,
+    "duration_ms": 911.2412929534912
+  },
+  "judge:openai/gpt-oss-120b:Which laboratory was the healthcare review research conducted at?:1684288600712183385": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies the IoT & wireless communication protocols laboratory at IIUM, matching the ground truth and supported by the retrieved context.",
+    "prompt_tokens": 967,
+    "completion_tokens": 229,
+    "total_tokens": 1196,
+    "duration_ms": 825.761079788208
+  },
+  "gen:gemini-3.1-flash-lite:What award number supported the material in the healthcare review?:7797912016775369363": {
+    "text": "The material in the healthcare review is supported by the Air Force Office of Scientific Research under award number FA2386-21-1-4025.",
+    "prompt_tokens": 2271,
+    "candidate_tokens": 35,
+    "total_tokens": 2306,
+    "duration_ms": 981.5833568572998
+  },
+  "judge:openai/gpt-oss-120b:What award number supported the material in the healthcare review?:-5766835061060118309": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly provides the award number FA2386-21-1-4025, which is directly supported by the retrieved context.",
+    "prompt_tokens": 957,
+    "completion_tokens": 257,
+    "total_tokens": 1214,
+    "duration_ms": 1067.5830841064453
+  },
+  "gen:gemini-3.1-flash-lite:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:-3246988795915766536": {
+    "text": "When smart contracts are used to make decisions and conduct analytics with machine-learning algorithms, the results may be trusted and unquestioned.",
+    "prompt_tokens": 1451,
+    "candidate_tokens": 26,
+    "total_tokens": 1477,
+    "duration_ms": 1268.0318355560303
+  },
+  "judge:openai/gpt-oss-120b:What happens when smart contracts are used to make decisions and conduct analytics with machine learning algorithms?:-6330744170215225960": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states that results may be trusted and unquestioned, matching the ground truth and directly supported by the provided context.",
+    "prompt_tokens": 868,
+    "completion_tokens": 280,
+    "total_tokens": 1148,
+    "duration_ms": 1300.9796142578125
+  },
+  "gen:gemini-3.1-flash-lite:Who is the PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College Ghaziabad?:-6908055723569996806": {
+    "text": "The PI Coordinator for the Auto-Solar Irrigation System at ABES Engineering College, Ghaziabad, is Dr. Rohit Rastogi.",
+    "prompt_tokens": 2098,
+    "candidate_tokens": 27,
+    "total_tokens": 2125,
+    "duration_ms": 1354.4154167175293
+  },
+  "gen:gemini-3.1-flash-lite:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:6897349201738702126": {
+    "text": "According to the Principal, a single enterprising graduate can offer scalable, high-impact services to millions of global enterprises by leveraging Agentic AI solutions.",
+    "prompt_tokens": 1633,
+    "candidate_tokens": 29,
+    "total_tokens": 1662,
+    "duration_ms": 1037.2991561889648
+  },
+  "judge:openai/gpt-oss-120b:How can a single enterprising graduate offer scalable high-impact services according to the Principal?:-1546630785720010336": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states leveraging Agentic AI solutions, which is directly supported by the context.",
+    "prompt_tokens": 877,
+    "completion_tokens": 277,
+    "total_tokens": 1154,
+    "duration_ms": 1131.638526916504
+  },
+  "gen:gemini-3.1-flash-lite:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:-3931725344914322434": {
+    "text": "The technological domain that offers a frontier of purpose-driven innovation for assistive technologies is **Mobile Robotics**.",
+    "prompt_tokens": 1505,
+    "candidate_tokens": 20,
+    "total_tokens": 1525,
+    "duration_ms": 1148.6623287200928
+  },
+  "judge:openai/gpt-oss-120b:What technological domain offers a frontier of purpose-driven innovation for assistive technologies?:422465395823628051": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states Mobile Robotics, matching the ground truth and directly supported by the retrieved context.",
+    "prompt_tokens": 932,
+    "completion_tokens": 188,
+    "total_tokens": 1120,
+    "duration_ms": 716.5641784667969
+  },
+  "gen:gemini-3.1-flash-lite:What does a graduate assert about how TSEC prepares its students?:1916188694777787992": {
+    "text": "A graduate of the B.E. in Computer Engineering program asserts that TSEC prepares its students for a competitive corporate world. They note that the institution provides better career opportunities and improving placements, while fostering growth not only technically but also socially and culturally through various committee activities.",
+    "prompt_tokens": 1592,
+    "candidate_tokens": 54,
+    "total_tokens": 1646,
+    "duration_ms": 1234.5566749572754
+  },
+  "judge:openai/gpt-oss-120b:What does a graduate assert about how TSEC prepares its students?:5979361610798816398": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly reports the graduate's claim that TSEC prepares students for a competitive corporate world and includes only details supported by the retrieved context.",
+    "prompt_tokens": 930,
+    "completion_tokens": 328,
+    "total_tokens": 1258,
+    "duration_ms": 1056.3077926635742
+  },
+  "gen:gemini-3.1-flash-lite:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:8667882884922118231": {
+    "text": "The primary contact person for the document is Nurul Fadzlin Hasbullah (nfadzlinh@iium.edu.my).",
+    "prompt_tokens": 1606,
+    "candidate_tokens": 29,
+    "total_tokens": 1635,
+    "duration_ms": 1194.1862106323242
+  },
+  "judge:openai/gpt-oss-120b:Who acts as the primary contact person for queries regarding the blockchain electronic health record survey?:-3823071954413984583": {
+    "correctness": 1,
+    "faithfulness": 0,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the ground\u2011truth contact, but the retrieved context does not contain that information, so the claim is not supported by the provided source.",
+    "prompt_tokens": 938,
+    "completion_tokens": 282,
+    "total_tokens": 1220,
+    "duration_ms": 1093.153715133667
+  },
+  "gen:gemini-3.1-flash-lite:What international geographic address identifies the location of the wireless communication laboratory?:-9046795536485926519": {
+    "text": "The provided document does not contain information regarding the location or address of a wireless communication laboratory.",
+    "prompt_tokens": 2259,
+    "candidate_tokens": 18,
+    "total_tokens": 2277,
+    "duration_ms": 1286.9150638580322
+  },
+  "judge:openai/gpt-oss-120b:What international geographic address identifies the location of the wireless communication laboratory?:4120222694214412666": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer refuses to provide the known address, making it incorrect for an answerable question, though the claim that the document lacks the info is faithful to the context.",
+    "prompt_tokens": 1018,
+    "completion_tokens": 264,
+    "total_tokens": 1282,
+    "duration_ms": 1948.5650062561035
+  },
+  "gen:gemini-3.1-flash-lite:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:6751051314923821022": {
+    "text": "The Aarupadai Veedu Institute of Technology (AISHE code C-10224) undertook the \"Fabrication and Installation of Seed Balls Production Equipment.\"",
+    "prompt_tokens": 2183,
+    "candidate_tokens": 34,
+    "total_tokens": 2217,
+    "duration_ms": 23867.786407470703
+  },
+  "judge:openai/gpt-oss-120b:Which educational center in Tamil Nadu with AISHE code C-10224 undertook the fabrication of automated seed ball generation machinery?:-1062885708013600604": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly names Aarupadai Veedu Institute of Technology as the centre with AISHE code C-10224 and cites the seed ball fabrication project, which is supported by the retrieved context.",
+    "prompt_tokens": 1145,
+    "completion_tokens": 333,
+    "total_tokens": 1478,
+    "duration_ms": 2520.0562477111816
+  },
+  "gen:gemini-3.1-flash-lite:Which higher educational institution in Ghaziabad registered AISHE identification code C-46112?:-7073315581103325170": {
+    "text": "The higher educational institution in Ghaziabad with the AISHE identification code C-46112 is **ABES Engineering College**.",
+    "prompt_tokens": 2111,
+    "candidate_tokens": 28,
+    "total_tokens": 2139,
+    "duration_ms": 1215.1598930358887
+  },
+  "gen:gemini-3.1-flash-lite:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:228187772457650392": {
+    "text": "WordNet is the lexical database used for semantic inspection, providing synsets, definitions, synonyms, and hypernym relations.",
+    "prompt_tokens": 1570,
+    "candidate_tokens": 24,
+    "total_tokens": 1594,
+    "duration_ms": 933.9804649353027
+  },
+  "judge:openai/gpt-oss-120b:What lexical database supported semantic sense disambiguation and synonym expansion in the text analysis pipeline?:-3906858216552420426": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly names WordNet as the lexical database and its description matches the provided context.",
+    "prompt_tokens": 934,
+    "completion_tokens": 262,
+    "total_tokens": 1196,
+    "duration_ms": 1109.217882156372
+  },
+  "gen:gemini-3.1-flash-lite:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:75745047869028032": {
+    "text": "The e-health record research was funded by the **Air Force Office of Scientific Research** (award number FA2386-21-1-4025). The research was conducted at the **International Islamic University Malaysia (IIUM)**.",
+    "prompt_tokens": 2161,
+    "candidate_tokens": 52,
+    "total_tokens": 2213,
+    "duration_ms": 1290.4064655303955
+  },
+  "judge:openai/gpt-oss-120b:What military agency funded the e-health record research and which Malaysian university campus housed the physical laboratory?:-429612585979145166": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly states the Air Force Office of Scientific Research as the funder and IIUM as the campus, both directly supported by the provided context.",
+    "prompt_tokens": 1089,
+    "completion_tokens": 251,
+    "total_tokens": 1340,
+    "duration_ms": 1102.3471355438232
+  },
+  "gen:gemini-3.1-flash-lite:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:2847455795792357827": {
+    "text": "In the NLP project:\n\n*   **Supervised neural model:** DistilBERT was the model fine-tuned for sequence classification.\n*   **NLP library:** NLTK was used for linguistic tokenization (as well as sentence segmentation, POS tagging, POS-aware lemmatization, and WordNet semantic lookup).",
+    "prompt_tokens": 1551,
+    "candidate_tokens": 66,
+    "total_tokens": 1617,
+    "duration_ms": 1176.2800216674805
+  },
+  "judge:openai/gpt-oss-120b:In the NLP project, what supervised neural model was fine-tuned for sequence classification and which NLP library handled linguistic tokenization?:-4627911690397207289": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer correctly identifies DistilBERT and NLTK, matching the ground truth and supported by the provided context.",
+    "prompt_tokens": 935,
+    "completion_tokens": 279,
+    "total_tokens": 1214,
+    "duration_ms": 902.4789333343506
+  },
+  "gen:gemini-3.1-flash-lite:In the sanctioned projects table, what is the allocated funding amount for the DC micro grid proposal at Aarupadai Veedu Institute?:9031353801861973474": {
+    "text": "The allocated funding amount for the \"DC micro grid based solar PV generation to supply power to street lamp and common utilities in a village\" proposal at Aarupadai Veedu Institute of Technology is 50,000.00.",
+    "prompt_tokens": 2104,
+    "candidate_tokens": 49,
+    "total_tokens": 2153,
+    "duration_ms": 1361.2730503082275
+  },
+  "gen:gemini-3.1-flash-lite:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:3695001253648580796": {
+    "text": "The provided document does not contain information regarding \"seed ball production equipment\" or \"Adhiyamaan College.\" Therefore, the requested information is not in the document.",
+    "prompt_tokens": 2166,
+    "candidate_tokens": 32,
+    "total_tokens": 2198,
+    "duration_ms": 1449.4028091430664
+  },
+  "judge:openai/gpt-oss-120b:In the project funding ledger, what is the sanctioned funding for the seed ball production equipment at Adhiyamaan College?:8367283044305853825": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer refuses to provide the known funding amount, making it incorrect, but its claim that the document lacks the requested info is consistent with the provided context.",
+    "prompt_tokens": 1116,
+    "completion_tokens": 371,
+    "total_tokens": 1487,
+    "duration_ms": 1950.9952068328857
+  },
+  "gen:gemini-3.1-flash-lite:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:6775483245974454211": {
+    "text": "Based on the provided text, the report compares the **TF-IDF + Logistic Regression** model with the **Fine-tuned DistilBERT** model. The weighted F1 scores reported for these models are:\n\n*   **TF-IDF + Logistic Regression:** 70.24%\n*   **Fine-tuned DistilBERT:** 35.92%",
+    "prompt_tokens": 1716,
+    "candidate_tokens": 78,
+    "total_tokens": 1794,
+    "duration_ms": 1395.9362506866455
+  },
+  "judge:openai/gpt-oss-120b:What is the alternative weighted F1 evaluation metric reported for the comparative classifier model in the report?:6976388465672083024": {
+    "correctness": 0,
+    "faithfulness": 1,
+    "is_refusal": false,
+    "explanation": "The answer provides weighted F1 values from the context (70.24% and 35.92%) which are supported, but it does not match the ground truth of 24% weighted F1, so it is incorrect.",
+    "prompt_tokens": 1030,
+    "completion_tokens": 324,
+    "total_tokens": 1354,
+    "duration_ms": 1124.8188018798828
+  },
+  "gen:gemini-3.1-flash-lite:What is the personal mobile phone number and bank account IFSC code of Dr. Rohit Rastogi?:7759437755432645939": {
+    "text": "The provided document does not contain the personal mobile phone number or bank account IFSC code for Dr. Rohit Rastogi.",
+    "prompt_tokens": 2158,
+    "candidate_tokens": 23,
+    "total_tokens": 2181,
+    "duration_ms": 1260.2198123931885
+  },
+  "gen:gemini-3.1-flash-lite:What subsidy percentage did the Ministry of New and Renewable Energy provide for solar cookers in the 2029 budget cycle?:-3858777687368554417": {
+    "text": "The provided document does not contain information regarding the Ministry of New and Renewable Energy or any subsidy percentages for solar cookers in the 2029 budget cycle.",
+    "prompt_tokens": 2153,
+    "candidate_tokens": 33,
+    "total_tokens": 2186,
+    "duration_ms": 1088.9887809753418
+  },
+  "gen:gemini-3.1-flash-lite:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:6644185791622697187": {
+    "text": "The provided document does not contain information regarding hostel mess fees or an annex at a Paris campus.",
+    "prompt_tokens": 1767,
+    "candidate_tokens": 19,
+    "total_tokens": 1786,
+    "duration_ms": 1094.5320129394531
+  },
+  "judge:openai/gpt-oss-120b:What is the hostel mess fee for air-conditioned double rooms in the Paris campus annex?:1472504164111990689": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly states that the document lacks the requested hostel mess fee information, matching the unanswerable ground truth.",
+    "prompt_tokens": 976,
+    "completion_tokens": 256,
+    "total_tokens": 1232,
+    "duration_ms": 2080.8472633361816
+  },
+  "gen:gemini-3.1-flash-lite:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:2142645341274910691": {
+    "text": "The provided document does not contain information regarding a placement package offered by Sony Tokyo in 2021.",
+    "prompt_tokens": 2065,
+    "candidate_tokens": 22,
+    "total_tokens": 2087,
+    "duration_ms": 1316.3790702819824
+  },
+  "judge:openai/gpt-oss-120b:What was the highest international placement package offered in Japanese Yen by Sony Tokyo in 2021?:-316395978308713644": {
+    "correctness": 1,
+    "faithfulness": 1,
+    "is_refusal": true,
+    "explanation": "The answer correctly refuses due to missing information and does not add unsupported claims.",
+    "prompt_tokens": 1003,
+    "completion_tokens": 228,
+    "total_tokens": 1231,
+    "duration_ms": 819.8235034942627
+  }
+}
