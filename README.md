@@ -624,23 +624,36 @@ The following metrics represent real, reproducible benchmark executions on branc
 - **Problem with Earlier Benchmarks:** Prior evaluations used tiny documents producing only ~2 chunks per document (guaranteeing 100% recall@3/5/10 by construction) and suffered from chunk-ID matching artifacts.
 - **Corpus & Span-Based Verification:** Evaluated against a **468,644-character corpus** across 4 dense technical and multi-table PDF documents (1,380 chunks at 400-chars down to 307 chunks at 1800-chars; baseline 461 chunks at 1200-chars). Every query matches ground-truth answers via **verbatim text spans** using a strict span-boundary matcher.
 - **DEV / TEST Isolation:** Configurations tuned strictly on **DEV (n=21)**; headline numbers evaluated on the isolated **HELD-OUT TEST set (n=21: 17 answerable, 4 unanswerable)**.
-- **Retrieval Recall & MRR (Held-Out TEST Set, Ollama 
-omic-embed-text:v1.5):**
+- **Retrieval Recall & MRR (Held-Out TEST Set, Ollama nomic-embed-text:v1.5):**
   - **CortexAI Baseline (1200-char, dense nomic, top-5):**
     - **Recall@5:** **41.18%** (Wilson 95% CI: [21.6%, 64.0%]) | **MRR:** **0.3235**
     - Proves the benchmark genuinely can fail under dense technical multi-table corpora.
   - **Optimized Configuration (Cross-Encoder Reranker, top-20 dense candidates -> top-5):**
     - **Recall@5:** **82.35%** (Wilson 95% CI: [59.0%, 93.8%]) | **MRR:** **0.7402**
-    - **Paired Bootstrap Difference 95% CI:** **[+17.6%, +64.7%]** ( < 0.01$, statistically significant).
-- **End-to-End QA Quality (Gemini 3.1 Flash Lite Generator + Groq openai/gpt-oss-120b Judge at =0$, 3 Runs):**
+    - **Paired Bootstrap Difference 95% CI:** **[+17.6%, +64.7%]** (p < 0.01, statistically significant).
+- **End-to-End QA Quality (Gemini 3.1 Flash Lite Generator + Groq openai/gpt-oss-120b Judge at T=0, 3 Runs):**
   - **Answer Correctness (Answerable questions):** **82.4%** +/- 0.00% (up from 51.0% in baseline, a **+31.4%** absolute gain).
   - **Faithfulness Rate:** **95.2%** +/- 0.00% (zero hallucinations on retrieval hits).
   - **Refusal Accuracy on Unanswerables:** **100.0%** (4/4 unanswerable questions correctly refused).
   - **Correctness Given Retrieval Hit:** **92.9%** (demonstrates generator failure is overwhelmingly driven by retrieval misses, not comprehension).
 - **Efficiency & Cost Profile:**
   - Stage Latencies: Embed p50 = 147.3ms (live CPU) / 0.004ms (cached), Vector Search p50 = 4.7ms, Generation p50 = 1,234.6ms.
-  - Cost per Query: **.00046 USD** (~0.046 cents) | Cost per Correct Answer: **.00070 USD**.
-  - All reproducible scripts, raw logs, and evaluation rubrics preserved in [enchmarks/retrieval_bench/](benchmarks/retrieval_bench/).
+  - Cost per Query: **$0.00046 USD** (~0.046 cents) | Cost per Correct Answer: **$0.00070 USD** (39.7% lower cost per successful answer).
+
+#### Consolidated Verified Performance Metrics
+
+| Benchmark Domain | Metric | Baseline (CortexAI Current) | Verified / Optimized Value | Delta & Statistical Confidence |
+|:---|:---|:---:|:---:|:---:|
+| **Payment Integrity** | Replay deduplication (100 concurrent) | Non-atomic read | **100/100 accounted for** (1 credit, 98 blocked, 1 rate-limited) | Deterministic state machine |
+| **Rate Limiter** | Burst Concurrency (120 reqs/min) | Timestamp collision (103+ allowed) | **100 allowed (200 OK), 20 rejected (429)** | UUID tie-breaker in Redis ZSET |
+| **System Outage** | Redis failure 503 round-trip latency | Under 0.01ms (fake memory mock) | **p50 = 3,023ms, p95 = 3,036ms** | Gateway fail-open + Auth 503 |
+| **Corpus Complexity** | Evaluated PDF text volume | 13 chunks (trivial) | **468,644 chars (~135 pages, 461 baseline chunks)** | Multi-table & multi-hop technical PDFs |
+| **Retrieval Recall** | Recall@5 on held-out TEST (n=21) | 41.18% (can fail) | **82.35%** (Cross-Encoder Reranker) | **+41.17%** (Bootstrap 95% CI: [+17.6%, +64.7%]) |
+| **Ranking Quality** | Mean Reciprocal Rank (MRR) | 0.3235 | **0.7402** | **+128.8%** improvement in top ranks |
+| **Answer Quality** | End-to-End Correctness (T=0.2, 3 runs) | 51.0% | **82.4%** (Gemini 3.1 Flash Lite) | **+31.4%** absolute accuracy gain |
+| **Hallucination** | Faithfulness rate | 88.9% | **95.2%** (Groq GPT-OSS 120B Judge, T=0) | Zero hallucination on retrieval hits |
+| **Grounded Refusal** | Refusal accuracy on unanswerables | 100.0% | **100.0%** (4/4 unanswerables refused) | Zero false acceptances |
+| **Query Economics** | Cost per query / Cost per correct answer| $0.00048 / $0.00116 | **$0.00046 / $0.00070 USD** | 39.7% lower cost per successful answer |
 
 ### 6. Prompt Injection Defense on Real Endpoints
 - **Setup:** 20 attack vectors (10 direct user jailbreaks + 10 indirect document injections) evaluated across 3 runs each ($n=60$) through Gateway `:8000`.
