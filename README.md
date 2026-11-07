@@ -317,56 +317,6 @@ X-Accel-Buffering: no    ← Nginx must not buffer SSE responses
 
 ---
 
-## 🎯 End-to-End RAG Answer Accuracy & Quality Benchmark
-
-CortexAI contains a production-quality **End-to-End RAG Answer Accuracy & Quality Benchmark System**. This system measures the actual factual correctness and generation quality of final generated answers from real PDF documents, clearly separating chunking, retrieval, LLM answer generation, and end-to-end quality.
-
-### 1. Evaluation Setup & Architecture
-
-```
-User Query
-    ↓
-PDF Ingest (pdf-parse v2) → Qdrant (Hybrid RRF: Vector + BM25)
-    ↓
-Retrieval (top-K chunks)
-    ↓
-pdfRag.agent.js (LLM generation with concise grounding prompt)
-    ↓
-Final Answer
-    ↓
-LLM-as-a-Judge (Evaluates Correctness, Faithfulness, Completeness, Relevance)
-```
-
-* **Dataset**: Synthetic 22-page ACME Employee Handbook PDF (25,699 chars, 51 chunks) and 74 curated QA pairs across 8 categories (factual, semantic, numerical, identifier, hard negative, temporal, multi-constraint, and unanswerable).
-* **Splits**: Stratified split into **DEV** (26 questions for calibration) and **TEST** (48 questions held-out for frozen verification).
-* **Evaluator Architecture Fix**: Corrected judge evidence window to receive the full top-K retrieved context rather than a single golden sentence. This eliminated false-positive hallucination penalties caused by evaluator truncation.
-
-### 2. Production Benchmark Scorecard (DEV Split)
-
-| Metric | Baseline (Pre-Fix) | Production Optimized | Δ Improvement |
-| :--- | :---: | :---: | :---: |
-| **Retrieval Hit@5** | N/A | **100.0%** | — |
-| Retrieval MRR | N/A | **0.83** | — |
-| Retrieval NDCG@5 | N/A | **0.88** | — |
-| **Strict Answer Correctness Rate** | 87.0% (20/23) | **100.0% (23/23)** | **+13.0 pp** |
-| Average Correctness Score (0–5) | 4.48 | **4.91** | **+0.43** |
-| Average Faithfulness Score (0–5) | 3.78 | **4.91** | **+1.13** |
-| Average Completeness Score (0–5) | 4.13 | **4.91** | **+0.78** |
-| **Hallucination Rate** | 17.4% (4/23) | **0.0% (0/23)** | **−17.4 pp** |
-| **Unanswerable Rejection Accuracy** | 100.0% (3/3) | **100.0% (3/3)** | **0.0 pp** |
-| Oracle-Context Correctness | 91.3% | **91.3%** | — |
-| P50 End-to-End Latency | 3,955 ms | **3,379 ms** | **−576 ms** |
-| P95 End-to-End Latency | 7,773 ms | **5,643 ms** | **−2,130 ms** |
-
-### 3. Held-Out TEST Split Retrieval Performance
-* **Retrieval Hit@5**: **95.2%**
-* **MRR**: **0.81**
-* **NDCG@5**: **0.85**
-
-
-
----
-
 ## 🛠️ Infrastructure Setup
 
 ### Docker
